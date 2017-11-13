@@ -76,16 +76,16 @@ Object.defineProperty(Segment.prototype, 'subpath', {enumerable: true, get: func
 }});
 
 Object.defineProperty(Segment.prototype, 'index', {enumerable: true, get: function(){
-	return this.subpath.segments.indexOf(this.addr);
+	return this.subpath.data.segments.indexOf(this.addr);
 }});
 
 Object.defineProperty(Segment.prototype, 'prev', {enumerable: true, get: function(){
-	var addr = this.subpath.segments[this.index - 1];
+	var addr = this.subpath.data.segments[this.index - 1];
 	return state.segments[addr] ? new Segment(addr) : null;
 }});
 
 Object.defineProperty(Segment.prototype, 'next', {enumerable: true, get: function(){
-	var addr = this.subpath.segments[this.index + 1];
+	var addr = this.subpath.data.segments[this.index + 1];
 	return state.segments[addr] ? new Segment(addr) : null;
 }});
 
