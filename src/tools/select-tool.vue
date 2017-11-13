@@ -57,8 +57,6 @@ export default {
 
 			} else if ( e.target.classList.contains('point-marker') ) {
 
-				this.$hub.emit('selectMarker',{el:e.target});
-
 				var pointAddr = e.target.getAttribute('data-addr');
 				var selected = _.includes(this.$store.state.editor.selectedPoints, pointAddr);
 
@@ -101,7 +99,9 @@ export default {
 			var yMax = Math.max(this.userDragEnd.y, this.userDragStart.y);
 
 			var points = [];
-			for (var pointAddr of this.markedPoints) {
+			var controlLayer = this.$app.$editor.$control;
+			for (var marker of controlLayer.getElementsByClassName('point-marker')) {
+				var pointAddr = marker.getAttribute('data-addr');
 				var point = this.$store.state.drawing.points[pointAddr];
 				if (point.x > xMin && point.y > yMin && point.x < xMax && point.y < yMax) {
 					points.push(pointAddr);

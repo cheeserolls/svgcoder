@@ -4,8 +4,8 @@
 			<div class="canvas" :style="canvasStyle">
 				<svg-root :addr="rootNodeAddr" />
 			</div>
-			<div class="markers">
-				<handle v-for="point in pointMarkers" :key="handle.addr" :location="handle.location" :selectable="true" :selected="handle.selected"  />
+			<div class="control">
+				<control-root :addr="rootNodeAddr" />
 			</div>
 		</div>
 	</div>
@@ -14,9 +14,9 @@
 <script>
 import _ from 'lodash';
 import SvgRoot from './svg-root.vue';
-import Handle from './handle.vue';
+import ControlRoot from './control-root.vue';
 export default {
-	components: {SvgRoot, Handle},
+	components: { SvgRoot, ControlRoot },
 	computed: {
 		canvasStyle: function() {
 			var style = this.$store.getters.canvasRect;
@@ -28,15 +28,14 @@ export default {
 		},
 		rootNodeAddr: function() {
 			return this.$store.state.drawing.rootNode;
-		},
-		pointMarkers: function() {
-			return this.$store.state.editor.pointMarkers;
 		}
 	},
 	mounted: function() {
 
-		this.viewport = this.$el.getElementsByClassName('viewport')[0];
-		this.canvas = this.viewport.getElementsByClassName('canvas')[0];
+		this.$app.$editor = this;
+		this.$viewport = this.$el.getElementsByClassName('viewport')[0];
+		this.$canvas = this.$viewport.getElementsByClassName('canvas')[0];
+		this.$control = this.$viewport.getElementsByClassName('control')[0];
 
 		this.resize();
 		this.fitDrawingInViewport();
@@ -49,6 +48,7 @@ export default {
 	},
 	destroyed: function() {
 
+		this.$app.$editor = null;
 		window.removeEventListener('resize', this.resize);
 		window.removeEventListener('load', this.resize);
 		window.removeEventListener('keydown', this.keydown);
@@ -57,12 +57,12 @@ export default {
 	},
 	methods: {
 		resize: function() {
-			var box = this.viewport.getBoundingClientRect();
+			var box = this.$viewport.getBoundingClientRect();
 			this.$store.commit('updateViewport',{
 				pageX: box.left + window.pageXOffset,
 				pageY: box.top + window.pageYOffset,
-				width: this.viewport.offsetWidth,
-				height: this.viewport.offsetHeight
+				width: this.$viewport.offsetWidth,
+				height: this.$viewport.offsetHeight
 			});
 		},
 		fitDrawingInViewport: function() {

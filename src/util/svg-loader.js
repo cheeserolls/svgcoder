@@ -56,7 +56,8 @@ SvgLoader.prototype.readNode = function(node) {
 		nodeData.type = node.tagName;
 		this.readElementAttributes(nodeData, node);
 	} else {
-		// TODO text nodes etc
+		nodeData.type = node.nodeName;
+		nodeData.value = node.nodeValue;
 	}
 
 	nodeData.children = [];
@@ -100,17 +101,6 @@ SvgLoader.prototype.readPathData = function(eleData, pathString, ele) {
 					segment[pointName] = pointAddr;
 				}
 			}
-			/*
-			if (segment.type == 'h' || segment.type == 'H') {
-				var point = {
-					parent: segmentAddr,
-					psuedo: 'end'
-				};
-				var pointAddr = this.getAddr(point);
-				this.data.points[pointAddr] = point;
-				segment.pseudoEnd = pointAddr;
-			}
-			*/
 		}
 	}
 

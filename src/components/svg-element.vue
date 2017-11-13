@@ -1,5 +1,5 @@
 <template>
-	<component :is="ele.type+'_'" :addr="addr" :ele="ele" />
+	<component v-if="componentName" :is="componentName" :addr="addr" :ele="ele" />
 </template>
 
 <script>
@@ -12,6 +12,13 @@ export default {
 	computed: {
 		ele: function() {
 			return this.$store.state.drawing.nodes[this.addr];
+		},
+		componentName: function() {
+			switch (this.ele.type) {
+				case 'path':
+					return 'path_';
+			}
+			return false;
 		}
 	}
 };
