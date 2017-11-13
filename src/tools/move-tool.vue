@@ -17,35 +17,27 @@ export default {
 	},
 	methods: {
 		dragstart: function(e) {
-			if ( this.selectedPoints.length ) {
-				this.clickStart = this.$app.mouseEventToUser(e);
-				this.pointsStart = this.selectedPoints.map( pointAddr => {
-					var point = this.$store.state.drawing.points[pointAddr];
-					return {x: point.x, y: point.y};
-				} );
-			}
+			this.clickStart = this.$app.mouseEventToUser(e);
+			this.$app.$emit('markerMoveStart',{selected: true});
 		},
 		dragupdate: function(e) {
-			if ( this.selectedPoints.length ) {
-				var clickPoint = this.$app.mouseEventToUser(e);
-				var updates = this.selectedPoints.map( (pointAddr,i) => {
-					return {
-						addr: pointAddr,
-						x: this.pointsStart[i].x + clickPoint.x - this.clickStart.x,
-						y: this.pointsStart[i].y + clickPoint.y - this.clickStart.y
-					};
-				} );
-				this.$store.commit('updatePoints', {updates: updates});
-			}
+			var clickPoint = this.$app.mouseEventToUser(e);
+			this.$app.$emit('markerMoveUpdate',{selected: true, dx: clickPoint.x - this.clickStart.x, dy: clickPoint.y - this.clickStart.y});
+		},
+		dragend: function(e) {
+			var clickPoint = this.$app.mouseEventToUser(e);
+			this.$app.$emit('markerMoveEnd',{selected: true, dx: clickPoint.x - this.clickStart.x, dy: clickPoint.y - this.clickStart.y});
 		}
 	},
 	mounted: function() {
 		this.$app.$on('editorDragstart', this.dragstart);
 		this.$app.$on('editorDragupdate', this.dragupdate);
+		this.$app.$on('editorDragend', this.dragend);
 	},
 	destroyed: function() {
 		this.$app.$off('editorDragstart', this.dragstart);
 		this.$app.$off('editorDragupdate', this.dragupdate);
+		this.$app.$off('editorDragend', this.dragend);
 	}
 };
 
