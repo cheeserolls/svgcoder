@@ -1,6 +1,6 @@
 <template>
 	<g class="control-segment" :data-addr="addr">
-		<point-marker v-for="point in this.points" :key="point.addr" :addr="point.addr" :guide="point.guide" />
+		<point-marker v-for="point in this.points" :key="point.addr" :pointAddr="point.addr" :guide="point.guide" />
 		<template v-for="marker in this.markers">
 			<h-segment-end-marker v-if="marker.type == 'h-end'" :segmentAddr="addr" :key="marker.key" />
 		</template>

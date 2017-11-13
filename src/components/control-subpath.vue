@@ -1,6 +1,6 @@
 <template>
 	<g class="control-subpath" :data-addr="addr">
-		<point-marker :addr="start" :guide="false" />
+		<point-marker :pointAddr="start" :guide="false" />
 		<control-segment v-for="segmentAddr in segments" :key="segmentAddr" :addr="segmentAddr" :pathSelected="pathSelected" />
 	</g>
 </template>
