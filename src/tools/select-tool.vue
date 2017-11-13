@@ -36,9 +36,6 @@ export default {
 		selectedPoints: function() {
 			return this.$store.state.editor.selectedPoints;
 		},
-		markedPoints: function() {
-			return this.$store.getters.markedPoints;
-		},
 	},
 	methods: {
 		click: function(e) {
@@ -59,6 +56,8 @@ export default {
 				}
 
 			} else if ( e.target.classList.contains('point-marker') ) {
+
+				this.$hub.emit('selectMarker',{el:e.target});
 
 				var pointAddr = e.target.getAttribute('data-addr');
 				var selected = _.includes(this.$store.state.editor.selectedPoints, pointAddr);

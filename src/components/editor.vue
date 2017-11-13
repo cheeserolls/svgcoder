@@ -5,7 +5,7 @@
 				<svg-root :addr="rootNodeAddr" />
 			</div>
 			<div class="markers">
-				<handle v-for="handle in handles" :key="handle.addr" :location="handle.location" :selectable="true" :selected="handle.selected"  />
+				<handle v-for="point in pointMarkers" :key="handle.addr" :location="handle.location" :selectable="true" :selected="handle.selected"  />
 			</div>
 		</div>
 	</div>
@@ -29,29 +29,8 @@ export default {
 		rootNodeAddr: function() {
 			return this.$store.state.drawing.rootNode;
 		},
-		handles: function() {
-			var markedPoints = [];
-			for (var eleAddr of this.$store.state.editor.selectedPaths) {
-				var ele = this.$store.state.drawing.nodes[eleAddr];
-				for (var subpathAddr of ele.subpaths) {
-					var subpath = this.$store.state.drawing.subpaths[subpathAddr];
-					markedPoints.push(subpath.start);
-					for (var segmentAddr of subpath.segments) {
-						var segment = this.$store.state.drawing.segments[segmentAddr];
-						if (segment.c0) {markedPoints.push(segment.c0);}
-						if (segment.c1) {markedPoints.push(segment.c1);}
-						if (segment.end) {markedPoints.push(segment.end);}
-					}
-				}
-			}
-			return markedPoints.map( pointAddr => {
-				var point = this.$store.state.drawing.points[pointAddr];
-				return {
-					addr: pointAddr,
-					location: point,
-					selected: _.includes(this.$store.state.editor.selectedPoints, pointAddr)
-				};
-			} );
+		pointMarkers: function() {
+			return this.$store.state.editor.pointMarkers;
 		}
 	},
 	mounted: function() {

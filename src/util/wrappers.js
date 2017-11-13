@@ -2,18 +2,35 @@ var Wrappers = {};
 
 let map = new WeakMap();
 
-let internal = function (object) {
-	if (!map.has(object)) {
-		map.set(object, {});
-	}
-	return map.get(object);
-};
-
 let state;
 
-Wrappers.setState = function(obj) {
-	state = obj;
+let Path = function(addr) {
+	Object.defineProperty(this, 'addr', {enumerable: true, value:addr, writable:false});
 };
+
+Object.defineProperty(Path.prototype, 'data', {enumerable: true, get: function(){
+	return state.nodes[this.addr];
+}});
+
+Object.defineProperty(Path.prototype, 'subpaths', {enumerable: true, get: function(){
+	return this.data.subpaths.map(addr => {return new Subpath(addr);});
+}});
+
+let Subpath = function(addr) {
+	Object.defineProperty(this, 'addr', {enumerable: true, value:addr, writable:false});
+};
+
+Object.defineProperty(Subpath.prototype, 'data', {enumerable: true, get: function(){
+	return state.subpaths[this.addr];
+}});
+
+Object.defineProperty(Subpath.prototype, 'segments', {enumerable: true, get: function(){
+	return this.data.segments.map(addr => {return new Segment(addr);});
+}});
+
+Object.defineProperty(Subpath.prototype, 'start', {enumerable: true, get: function(){
+	return new Point(this.data.start);
+}});
 
 let Point = function(addr) {
 	Object.defineProperty(this, 'addr', {enumerable: true, value:addr, writable:false});
@@ -21,6 +38,14 @@ let Point = function(addr) {
 
 Object.defineProperty(Point.prototype, 'data', {enumerable: true, get: function(){
 	return state.points[this.addr];
+}});
+
+Object.defineProperty(Point.prototype, 'x', {enumerable: true, get: function(){
+	return this.data.x;
+}});
+
+Object.defineProperty(Point.prototype, 'y', {enumerable: true, get: function(){
+	return this.data.y;
 }});
 
 Object.defineProperty(Point.prototype, 'parent', {enumerable: true, get: function(){
@@ -40,6 +65,10 @@ let Segment = function(addr) {
 
 Object.defineProperty(Segment.prototype, 'data', {enumerable: true, get: function(){
 	return state.segments[this.addr];
+}});
+
+Object.defineProperty(Segment.prototype, 'type', {enumerable: true, get: function(){
+	return new Subpath(this.data.type);
 }});
 
 Object.defineProperty(Segment.prototype, 'subpath', {enumerable: true, get: function(){
@@ -67,9 +96,9 @@ Object.defineProperty(Segment.prototype, 'start', {enumerable: true, get: functi
 
 Object.defineProperty(Segment.prototype, 'end', {enumerable: true, get: function(){
 	switch(this.data.type) {
-		case 'v': case 'V':
-			return {x: this.data.endX, y: this.start.y};
 		case 'h': case 'H':
+			return {x: this.data.endX, y: this.start.y};
+		case 'v': case 'V':
 			return {x: this.start.x, y: this.data.endY};
 		case 'z': case 'Z':
 			return this.subpath.start;
@@ -78,7 +107,24 @@ Object.defineProperty(Segment.prototype, 'end', {enumerable: true, get: function
 	}
 }});
 
+Object.defineProperty(Segment.prototype, 'c0', {enumerable: true, get: function(){
+	return this.data.c0 ? new Point(this.data.c0) : null;
+}});
 
+Object.defineProperty(Segment.prototype, 'c1', {enumerable: true, get: function(){
+	return this.data.c1 ? new Point(this.data.c1) : null;
+}});
+
+Wrappers.setState = function(obj) {
+	state = obj;
+};
+
+Wrappers.point = function(addr) { return new Point(addr); };
+Wrappers.subpath = function(addr) { return new Subpath(addr); };
+Wrappers.segment = function(addr) { return new Segment(addr); };
+Wrappers.path = function(addr) { return new Path(addr); };
+
+export default Wrappers;
 
 /*
 

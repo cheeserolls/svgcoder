@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import wrappers from '../util/wrappers.js';
 export default {
 	state: {
 		viewport: {
@@ -29,6 +30,22 @@ export default {
 				width: state.scale * rootState.drawing.viewbox.width,
 				height: state.scale * rootState.drawing.viewbox.height
 			};
+		},
+		pointMarkers: function(state, getters, rootState) {
+			var pointMarkers = [];
+			for (var eleAddr of state.selectedPaths) {
+				var path = wrappers.path(eleAddr);
+				for (var subpath of path.subpaths) {
+					pointMarkers.push(subpath.start);
+					for (var segment of subpath.segments) {
+						if (segment.type == 'Z' || segment.type == 'z') {break;}
+						if (segment.c0) {pointMarkers.push(segment.c0);}
+						if (segment.c1) {pointMarkers.push(segment.c1);}
+						pointMarkers.push(segment.end);
+					}
+				}
+			}
+			return pointMarkers.map(point => point.addr);
 		}
 	},
 	mutations: {
