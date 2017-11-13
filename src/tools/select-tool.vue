@@ -55,19 +55,14 @@ export default {
 					this.$store.commit('updateSelectedPaths', {action:'replace', paths:[pathAddr]});
 				}
 
-			} else if ( e.target.classList.contains('point-marker') ) {
-
-				var pointAddr = e.target.getAttribute('data-addr');
-				var selected = _.includes(this.$store.state.editor.selectedPoints, pointAddr);
+			} else if ( e.target.classList.contains('marker') ) {
 
 				if (e.shiftKey) {
-					if ( selected ) {
-						this.$store.commit('updateSelectedPoints', {action:'remove', points:[pointAddr]});
-					} else {
-						this.$store.commit('updateSelectedPoints', {action:'add', points:[pointAddr]});
-					}
+					this.$app.$emit('markerSelect', {action: 'toggle', target: e.target});
 				} else {
-					this.$store.commit('updateSelectedPoints', {action:'replace', points:[pointAddr]});
+					this.$store.commit('updateSelectedPoints', {action: 'deselect'});
+					this.$store.commit('updateSelectedMarkers', {action: 'deselect'});
+					this.$app.$emit('markerSelect', {action: 'select', target: e.target});
 				}
 
 			} else {
@@ -93,25 +88,19 @@ export default {
 		dragend: function(e) {
 
 			this.userDragEnd = this.$app.mouseEventToUser(e);
-			var xMin = Math.min(this.userDragEnd.x, this.userDragStart.x);
-			var yMin = Math.min(this.userDragEnd.y, this.userDragStart.y);
-			var xMax = Math.max(this.userDragEnd.x, this.userDragStart.x);
-			var yMax = Math.max(this.userDragEnd.y, this.userDragStart.y);
+			var range = {
+				xMin: Math.min(this.userDragEnd.x, this.userDragStart.x),
+				yMin: Math.min(this.userDragEnd.y, this.userDragStart.y),
+				xMax: Math.max(this.userDragEnd.x, this.userDragStart.x),
+				yMax: Math.max(this.userDragEnd.y, this.userDragStart.y)
+			};
 
-			var points = [];
-			var controlLayer = this.$app.$editor.$control;
-			for (var marker of controlLayer.getElementsByClassName('point-marker')) {
-				var pointAddr = marker.getAttribute('data-addr');
-				var point = this.$store.state.drawing.points[pointAddr];
-				if (point.x > xMin && point.y > yMin && point.x < xMax && point.y < yMax) {
-					points.push(pointAddr);
-				}
+			if (!e.shiftKey) {
+				this.$store.commit('updateSelectedPoints', {action: 'deselect'});
+				this.$store.commit('updateSelectedMarkers', {action: 'deselect'});
 			}
-			if (e.shiftKey) {
-				this.$store.commit('updateSelectedPoints',{action:'add',points: points});
-			} else {
-				this.$store.commit('updateSelectedPoints', {action:'replace', points: points});
-			}
+			this.$app.$emit('markerSelect', {action: 'select', range: range});
+
 			marquee.style.display = 'none';
 		}
 	},

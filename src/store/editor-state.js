@@ -15,7 +15,7 @@ export default {
 		},
 		gridWidth: 1,
 		snapToGrid: false,
-		markers: [],
+		selectedMarkers: [],
 		selectedPoints: [],
 		selectedPaths: [],
 		selectedSegments: [],
@@ -30,28 +30,9 @@ export default {
 				width: state.scale * rootState.drawing.viewbox.width,
 				height: state.scale * rootState.drawing.viewbox.height
 			};
-		},
-		pointMarkers: function(state, getters, rootState) {
-			var pointMarkers = [];
-			for (var eleAddr of state.selectedPaths) {
-				var path = wrappers.path(eleAddr);
-				for (var subpath of path.subpaths) {
-					pointMarkers.push(subpath.start);
-					for (var segment of subpath.segments) {
-						if (segment.type == 'Z' || segment.type == 'z') {break;}
-						if (segment.c0) {pointMarkers.push(segment.c0);}
-						if (segment.c1) {pointMarkers.push(segment.c1);}
-						pointMarkers.push(segment.end);
-					}
-				}
-			}
-			return pointMarkers.map(point => point.addr);
 		}
 	},
 	mutations: {
-		addMarker: function(state, payload) {
-			state.markers.push(payload.marker);
-		},
 		updateViewport: function(state, payload) {
 			if (payload.pageX != null) {state.viewport.pageX = payload.pageX;}
 			if (payload.pageY != null) {state.viewport.pageY = payload.pageY;}
@@ -101,6 +82,22 @@ export default {
 					break;
 				case 'deselect':
 					state.selectedPoints = [];
+					break;
+			}
+		},
+		updateSelectedMarkers: function(state, payload) {
+			switch (payload.action) {
+				case 'replace':
+					state.selectedMarkers = payload.points;
+					break;
+				case 'add':
+					state.selectedMarkers = _.union(state.selectedMarkers, payload.markers);
+					break;
+				case 'remove':
+					state.selectedMarkers = _.difference(state.selectedMarkers, payload.markers);
+					break;
+				case 'deselect':
+					state.selectedMarkers = [];
 					break;
 			}
 		},

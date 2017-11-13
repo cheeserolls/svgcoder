@@ -37,6 +37,16 @@ export default {
 		this.$canvas = this.$viewport.getElementsByClassName('canvas')[0];
 		this.$control = this.$viewport.getElementsByClassName('control')[0];
 
+		var addrMap = new WeakMap;
+		var addrCount = 0;
+		this.getAddr = function(obj) {
+			if (!addrMap.has(obj)) {
+				var addr = (addrCount++).toString(36);
+				addrMap.set(obj,addr);
+			}
+			return addrMap.get(obj);
+		};
+
 		this.resize();
 		this.fitDrawingInViewport();
 

@@ -1,15 +1,20 @@
 <template>
-	<rect :class="cssClass" :data-addr="addr" :x="x" :y="y" width="8" height="8" />
+	<rect :class="cssClass" data-addr="addr" :x="x" :y="y" width="8" height="8" />
 </template>
 
 <script>
 import _ from 'lodash';
 import wrappers from '../util/wrappers.js';
 export default {
-	props: ['addr','guide'],
+	props: ['segmentAddr'],
+	data: function() {
+		return {
+			addr: null
+		};
+	},
 	computed: {
 		point: function() {
-			return wrappers.point(this.addr);
+			return wrappers.segment(this.segmentAddr).end;
 		},
 		viewportPoint: function() {
 			return this.$app.userToViewport(this.point);
@@ -21,14 +26,12 @@ export default {
 			return this.viewportPoint.y - 4;
 		},
 		selected: function() {
-			return _.includes(this.$store.state.editor.selectedPoints, this.addr);
+			return _.includes(this.$store.state.editor.selectedMarkers, this.addr);
 		},
 		cssClass: function() {
 			return {
 				'marker': true,
-				'point-marker': true,
-				selected: this.selected,
-				guide: this.guide
+				selected: this.selected
 			};
 		}
 	},
@@ -47,11 +50,14 @@ export default {
 					var action = 'add';
 					break;
 			}
-			this.$store.commit('updateSelectedPoints', {action: action, points: [this.addr]});
+			this.$store.commit('updateSelectedMarkers', {action: action, markers: [this.addr]});
 		},
 		moveTo: function(x,y) {
-			this.$store.commit('updatePoints', {updates: [{addr: this.addr, x:x, y:y}] });
+			this.$store.commit('updateSegmentData',{addr: this.segmentAddr, name: 'endX', value: x});
 		}
+	},
+	created: function() {
+		this.addr = this.$app.$editor.getAddr(this);
 	},
 	mounted: function() {
 		this.$app.$on('markerSelect',this.markerSelect);
