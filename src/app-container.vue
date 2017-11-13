@@ -61,6 +61,7 @@ export default {
 			<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
 				<path d="M 10 20 L 50 30L 5 40Z " data-addr="a0" class="st0" style="stroke: black; stroke-width: 1;"></path>
 				<path d="M 90 90 h -20 C 50 80 70 40 90 50" class="st0"></path>
+				<path d="M 10 90 A 15 30 20 1 1 40 80 L 50 95 Z" class="st0"></path>
 			</svg>
 		`;
 		var loader = new SvgLoader();
