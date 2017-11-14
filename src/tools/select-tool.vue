@@ -2,7 +2,7 @@
 	<div>
 		<h3>Select Tool</h3>
 		<!--<selected-path-info v-if="singleSelectedPath" :path="singleSelectedPath" />-->
-		<!--<selected-segment-info v-if="singleSelectedSegment" :segment="singleSelectedSegment" />-->
+		<selected-segment-info v-if="singleSelectedSegment" :segmentAddr="singleSelectedSegment" />
 		<!--<selected-point-info v-if="selectedPoints.length" />-->
 	</div>
 </template>
@@ -10,24 +10,24 @@
 <script>
 import _ from 'lodash';
 //import SelectedPathInfo from '../components/selected-path-info.vue';
-//import SelectedSegmentInfo from '../components/SelectedSegmentInfo.vue';
+import SelectedSegmentInfo from '../components/selected-segment-info.vue';
 //import SelectedPointInfo from '../components/selected-point-info.vue';
 
 var marquee;
 
 export default {
 	name: 'select-tool',
-	//components: {SelectedPathInfo,SelectedPointInfo},
+	components: { SelectedSegmentInfo },
 	computed: {
 		singleSelectedPath: function() {
-			if ( this.$store.state.selection.selectedPaths.length == 1 ) {
+			if ( this.$store.state.editor.selectedPaths.length == 1 ) {
 				return this.$store.state.editor.selectedPaths[0];
 			} else {
 				return false;
 			}
 		},
 		singleSelectedSegment: function() {
-			if ( this.$store.getters.selectedSegments.length == 1 ) {
+			if ( this.$store.state.editor.selectedSegments.length == 1 ) {
 				return this.$store.state.editor.selectedSegments[0];
 			} else {
 				return false;
