@@ -63,5 +63,29 @@ export default {
 		addPoint: function(state, payload) {
 			Vue.set( state.points, payload.addr, payload.data );
 		},
+		deleteNode: function(state, payload) {
+			var parentAddr = state.nodes[payload.addr].parent;
+			Vue.delete( state.nodes, payload.addr );
+			var existing = state.nodes[parentAddr].children;
+			existing.splice(existing.indexOf(payload.addr),1);
+			// @todo - delete child nodes too?
+		},
+		deleteSubpath: function(state, payload) {
+			var pathAddr = state.subpaths[payload.addr].parent;
+			Vue.delete( state.subpaths, payload.addr );
+			var existing = state.paths[pathAddr].subpaths;
+			existing.splice(existing.indexOf(payload.addr),1);
+			// @todo - delete child nodes too?
+		},
+		deleteSegment: function(state, payload) {
+			var subpathAddr = state.segments[payload.addr].parent;
+			Vue.delete( state.segments, payload.addr );
+			var existing = state.subpaths[subpathAddr].segments;
+			existing.splice(existing.indexOf(payload.addr),1);
+			// @todo - delete child nodes too?
+		},
+		deletePoint: function(state, payload) {
+			Vue.delete( state.points, payload.addr );
+		},
 	}
 };

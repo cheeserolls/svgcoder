@@ -97,9 +97,11 @@ export default {
 			subpathData.start = startAddr;
 			this.$store.commit('addPoint',{addr: startAddr, data: startData});
 			this.$store.commit('addSubpath',{addr: subpathAddr, data: subpathData, pathAddr: pathAddr, position: 'end'});
-			this.newSegment(subpathAddr);
+			this.$store.commit('deselect');
+			this.$store.commit('updateSelection',{action:'replace', paths:[pathAddr]});
+			this.newSegment(subpathAddr, x, y);
 		},
-		newSegment: function(subpathAddr) {
+		newSegment: function(subpathAddr, x, y) {
 			var a = this.$app.$drawingAddresser;
 			var segmentData = {parent: subpathAddr, type: this.nextType};
 			var segmentAddr = a.getAddr(segmentData);
@@ -118,11 +120,11 @@ export default {
 					break;
 				case 'h':
 					var pointNames = [];
-					segmentData.endX = 0;
+					segmentData.endX = x;
 					break;
 				case 'v':
 					var pointNames = [];
-					segmentData.endY = 0;
+					segmentData.endY = y;
 				case 'a':
 					var pointNames = ['end'];
 					segmentData.radiusX = 10;
@@ -133,13 +135,34 @@ export default {
 					break;
 			}
 			for (var pointName of pointNames) {
-				var pointData = {parent: segmentAddr, x: 0, y: 0};
+				var pointData = {parent: segmentAddr, x: x, y: y};
 				var pointAddr = a.getAddr(pointData);
 				segmentData[pointName] = pointAddr;
 				this.$store.commit('addPoint',{addr: pointAddr, data: pointData});
 			}
 			this.$store.commit('addSegment',{addr: segmentAddr, data: segmentData, subpathAddr: subpathAddr, position: 'end'});
+			this.$store.commit('updateSelection',{action:'segments', paths:[segmentAddr]});
 			this.pointNameQueue = pointNames;
+		},
+		deleteCurrentSegment: function() {
+			if (! this.currentSegment) {return;}
+			var numSubpathsInPath = this.path.data.subpaths.length;
+			var numSegmentsInSubpath = this.currentSubpath.segments.length;
+			for (var pointName of ['end','c0','c1']) {
+				var point = this.currentSegment[pointName];
+				if (point) {
+					this.$store.commit('deletePoint',{addr: point.addr});
+				}
+			}
+			this.$store.commit('deleteSegment',{addr: this.currentSegment.addr});
+			// if there was only one segment in the subpath, then delete the (now empty) subpath too
+			if (numSegmentsInSubpath == 1) {
+				this.$store.commit('deleteSubpath',{addr: this.currentSubpath.addr});
+				// if there was only one subpath in the path, then delete the (now empty) path too
+				if (numSubpathsInPath == 1) {
+					this.$store.commit('deleteNode',{addr: this.currentSubpath.addr});
+				}
+			}
 		},
 		click: function(e) {
 			var p = this.$app.mouseEventToUser(e);
@@ -147,7 +170,7 @@ export default {
 				this.$store.commit('updatePoints',{updates:[{addr: this.currentPoint.addr, x: p.x, y: p.y}]});
 				this.pointNameQueue.shift();
 				if (!this.pointNameQueue.length) {
-					this.newSegment(this.currentSubpath.addr);
+					this.newSegment(this.currentSubpath.addr, p.x, p.y);
 				}
 			} else {
 				this.newSubpath(p.x, p.y);
@@ -158,15 +181,25 @@ export default {
 			if (this.currentPoint) {
 				this.$store.commit('updatePoints',{updates:[{addr: this.currentPoint.addr, x: p.x, y: p.y}]});
 			}
+		},
+		keydown: function(e) {
+			if (e.key == 'Enter') {
+				// indicates the drawing has finished - remove the current segment and end drawing
+				this.deleteCurrentSegment();
+				this.pathAddr = null;
+				this.pointNameQueue = [];
+			}
 		}
 	},
 	mounted: function() {
 		this.$app.$on('editorClick', this.click);
 		this.$app.$on('editorMousemove', this.mousemove);
+		this.$app.$on('editorKeydown', this.keydown);
 	},
 	destroyed: function() {
 		this.$app.$off('editorClick', this.click);
 		this.$app.$off('editorMousemove', this.mousemove);
+		this.$app.$off('editorKeydown', this.keydown);
 	}
 };
 
