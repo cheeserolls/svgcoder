@@ -1,3 +1,4 @@
+import Vue from 'vue';
 export default {
 	state: {
 		viewbox: {
@@ -30,6 +31,37 @@ export default {
 		},
 		updateSegmentData: function(state, payload) {
 			state.segments[payload.addr][payload.name] = payload.value;
-		}
+		},
+		addNode: function(state, payload) {
+			Vue.set( state.nodes, payload.addr, payload.data );
+			var parentAddr = payload.parentAddr ? payload.parentAddr : state.rootNode;
+			var existing = state.nodes[parentAddr].children;
+			if ( payload.position == 'end' ) {
+				existing.push(payload.addr);
+			} else {
+				existing.splice(payload.position, 0, payload.addr);
+			}
+		},
+		addSubpath: function(state, payload) {
+			Vue.set( state.subpaths, payload.addr, payload.data );
+			var existing = state.nodes[payload.pathAddr].subpaths;
+			if ( payload.position == 'end' ) {
+				existing.push(payload.addr);
+			} else {
+				existing.splice(payload.position, 0, payload.addr);
+			}
+		},
+		addSegment: function(state, payload) {
+			Vue.set( state.segments, payload.addr, payload.data );
+			var existing = state.subpaths[payload.subpathAddr].segments;
+			if ( payload.position == 'end' ) {
+				existing.push(payload.addr);
+			} else {
+				existing.splice(payload.position, 0, payload.addr);
+			}
+		},
+		addPoint: function(state, payload) {
+			Vue.set( state.points, payload.addr, payload.data );
+		},
 	}
 };

@@ -16,6 +16,16 @@ Object.defineProperty(Path.prototype, 'subpaths', {enumerable: true, get: functi
 	return this.data.subpaths.map(addr => {return new Subpath(addr);});
 }});
 
+Object.defineProperty(Path.prototype, 'firstSubpath', {enumerable: true, get: function(){
+	var subpathAddr = this.data.subpaths[0];
+	return subpathAddr ? new Subpath(subpathAddr) : null;
+}});
+
+Object.defineProperty(Path.prototype, 'lastSubpath', {enumerable: true, get: function(){
+	var subpathAddr = this.data.subpaths[this.data.subpaths.length - 1];
+	return subpathAddr ? new Subpath(subpathAddr) : null;
+}});
+
 let Subpath = function(addr) {
 	Object.defineProperty(this, 'addr', {enumerable: true, value:addr, writable:false});
 };
@@ -26,6 +36,16 @@ Object.defineProperty(Subpath.prototype, 'data', {enumerable: true, get: functio
 
 Object.defineProperty(Subpath.prototype, 'segments', {enumerable: true, get: function(){
 	return this.data.segments.map(addr => {return new Segment(addr);});
+}});
+
+Object.defineProperty(Subpath.prototype, 'firstSegment', {enumerable: true, get: function(){
+	var segmentAddr = this.data.segments[0];
+	return segmentAddr ? new Segment(segmentAddr) : null;
+}});
+
+Object.defineProperty(Subpath.prototype, 'lastSegment', {enumerable: true, get: function(){
+	var segmentAddr = this.data.segments[this.data.segments.length - 1];
+	return segmentAddr ? new Segment(segmentAddr) : null;
 }});
 
 Object.defineProperty(Subpath.prototype, 'start', {enumerable: true, get: function(){

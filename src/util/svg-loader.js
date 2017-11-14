@@ -1,17 +1,7 @@
 import PathParser from './path-parser.js';
 
-var SvgLoader = function() {
-
-	var addrMap = new WeakMap;
-	var addrCount = 0;
-	this.getAddr = function(obj) {
-		if (!addrMap.has(obj)) {
-			var addr = (addrCount++).toString(36);
-			addrMap.set(obj,addr);
-		}
-		return addrMap.get(obj);
-	};
-
+var SvgLoader = function(addresser) {
+	this.addresser = addresser;
 }
 
 SvgLoader.prototype.readElementAttributes = function(eleData, ele) {
@@ -49,7 +39,7 @@ SvgLoader.prototype.readElementAttributes = function(eleData, ele) {
 SvgLoader.prototype.readNode = function(node) {
 
 	var nodeData = {};
-	var nodeAddr = this.getAddr(node);
+	var nodeAddr = this.addresser.getAddr(node);
 	this.data.nodes[nodeAddr] = nodeData;
 
 	if (node.nodeType == 1) {
@@ -77,26 +67,26 @@ SvgLoader.prototype.readPathData = function(eleData, pathString, ele) {
 
 	for (var i=0; i<subpaths.length; i++) {
 		var subpath = subpaths[i];
-		subpath.parent = this.getAddr(ele);
-		var subpathAddr = this.getAddr(subpath);
+		subpath.parent = this.addresser.getAddr(ele);
+		var subpathAddr = this.addresser.getAddr(subpath);
 		this.data.subpaths[subpathAddr] = subpath;
 		eleData.subpaths.push(subpathAddr);
 		var start = subpath.start;
 		start.parent = subpathAddr;
-		var startAddr = this.getAddr(start);
+		var startAddr = this.addresser.getAddr(start);
 		this.data.points[startAddr] = start;
 		subpath.start = startAddr;
 		for (var j=0; j<subpath.segments.length; j++) {
 			var segment = subpath.segments[j];
 			segment.parent = subpathAddr;
-			var segmentAddr = this.getAddr(segment);
+			var segmentAddr = this.addresser.getAddr(segment);
 			this.data.segments[segmentAddr] = segment;
 			subpath.segments[j] = segmentAddr;
 			for (var pointName of pointNames) {
 				if (segment[pointName]) {
 					var point = segment[pointName];
 					point.parent = segmentAddr;
-					var pointAddr = this.getAddr(point);
+					var pointAddr = this.addresser.getAddr(point);
 					this.data.points[pointAddr] = point;
 					segment[pointName] = pointAddr;
 				}

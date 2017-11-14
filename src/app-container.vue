@@ -16,6 +16,8 @@ import SettingsTool from './tools/settings-tool.vue';
 import ViewportTool from './tools/viewport-tool.vue';
 import MoveTool from './tools/move-tool.vue';
 import SelectTool from './tools/select-tool.vue';
+import DrawTool from './tools/draw-tool.vue';
+import Addresser from './util/addresser.js';
 import SvgLoader from './util/svg-loader.js';
 import wrappers from './util/wrappers.js';
 export default {
@@ -55,8 +57,10 @@ export default {
 		this.addTool('viewport','Viewport',ViewportTool,{hotkey:'v'});
 		this.addTool('select','Select',SelectTool,{hotkey:'s'});
 		this.addTool('move','Move',MoveTool,{hotkey:'m'});
+		this.addTool('draw','Draw',DrawTool,{hotkey:'d'});
 	},
 	mounted: function() {
+		this.$drawingAddresser = new Addresser();
 		var svgString = `
 			<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
 				<path d="M 10 20 L 50 30L 5 40Z " data-addr="a0" class="st0" style="stroke: black; stroke-width: 1;"></path>
@@ -64,7 +68,7 @@ export default {
 				<path d="M 10 90 A 15 30 20 1 1 40 80 L 50 95 Z" class="st0"></path>
 			</svg>
 		`;
-		var loader = new SvgLoader();
+		var loader = new SvgLoader(this.$drawingAddresser);
 		var data = loader.extractDataFromSvgString( svgString );
 		this.$store.commit('replaceEntireDrawing', data);
 	}
