@@ -1,10 +1,10 @@
 <template>
 	<g class="control-segment" :data-addr="addr">
-		<path class="segment-trace" :data-addr="addr" :d="d" />
-		<guide-line v-for="gl in guideLines" :key="gl.key" :start="gl.start" :end="gl.end" />
-		<point-marker v-for="pointAddr in this.points" :key="pointAddr" :pointAddr="pointAddr" :guide="false" />
-		<point-marker v-for="pointAddr in this.guidePoints" :key="pointAddr" :pointAddr="pointAddr" :guide="true" />
-		<template v-for="marker in this.markers">
+		<path v-if="layer == 'guides'" class="segment-trace" :data-addr="addr" :d="d" />
+		<guide-line v-if="layer == 'guides'" v-for="gl in guideLines" :key="gl.key" :start="gl.start" :end="gl.end" />
+		<point-marker v-if="layer == 'markers'" v-for="pointAddr in this.points" :key="pointAddr" :pointAddr="pointAddr" :guide="false" />
+		<point-marker v-if="layer == 'markers'" v-for="pointAddr in this.guidePoints" :key="pointAddr" :pointAddr="pointAddr" :guide="true" />
+		<template v-if="layer == 'markers'" v-for="marker in this.markers">
 			<h-segment-end-marker v-if="marker.type == 'h-end'" :segmentAddr="addr" :key="marker.key" />
 			<h-segment-end-marker v-if="marker.type == 'v-end'" :segmentAddr="addr" :key="marker.key" />
 			<!--<a-segment-radius-marker v-if="marker.type == 'arc-rad'" :segmentAddr="addr" :key="marker.key" />-->
@@ -22,7 +22,7 @@ import VSegmentEndMarker from './v-segment-end-marker.vue';
 //import ASegmentRotationMarker from './a-segment-rotation-marker.vue';
 import wrappers from '../util/wrappers.js';
 export default {
-	props: ['addr','pathSelected'],
+	props: ['addr','pathSelected','layer'],
 	components: { GuideLine, PointMarker, HSegmentEndMarker, VSegmentEndMarker/*, ASegmentRadiusMarker, ASegmentRotationMarker*/ },
 	computed: {
 		d: function() {

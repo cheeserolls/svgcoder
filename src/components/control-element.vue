@@ -1,11 +1,11 @@
 <template>
-	<component v-if="componentName" :is="componentName" :addr="addr" />
+	<component v-if="componentName" :is="componentName" :addr="addr" :layer="layer" />
 </template>
 
 <script>
 import ControlPath from './control-path.vue';
 export default {
-	props: ['addr'],
+	props: ['addr','layer'],
 	components: {
 		'control-path': ControlPath
 	},

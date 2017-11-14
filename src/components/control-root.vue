@@ -14,7 +14,12 @@
 				<rect x="2" y="2" width="2" height="2" class="a" />
 			</pattern>
 		</defs>
-		<control-element v-for="addr in children" :key="addr" :addr="addr" />
+		<g id="guides-layer">
+			<control-element v-for="addr in children" :key="addr" :addr="addr" layer="guides" />
+		</g>
+		<g id="markers-layer">
+			<control-element v-for="addr in children" :key="addr" :addr="addr" layer="markers" />
+		</g>
 	</svg>
 </template>
 

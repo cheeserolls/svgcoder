@@ -1,7 +1,7 @@
 <template>
 	<g class="control-subpath" :data-addr="addr">
-		<point-marker :pointAddr="start" :guide="false" />
-		<control-segment v-for="segmentAddr in segments" :key="segmentAddr" :addr="segmentAddr" :pathSelected="pathSelected" />
+		<point-marker v-if="layer == 'markers'" :pointAddr="start" :guide="false" />
+		<control-segment v-for="segmentAddr in segments" :key="segmentAddr" :addr="segmentAddr" :layer="layer" :pathSelected="pathSelected" />
 	</g>
 </template>
 
@@ -9,7 +9,7 @@
 import PointMarker from './point-marker.vue';
 import ControlSegment from './control-segment.vue';
 export default {
-	props: ['addr','pathSelected'],
+	props: ['addr','pathSelected','layer'],
 	components: { PointMarker, ControlSegment },
 	computed: {
 		start: function() {

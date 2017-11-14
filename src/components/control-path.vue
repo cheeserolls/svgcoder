@@ -1,6 +1,6 @@
 <template>
 	<g class="control-path" :data-addr="addr">
-		<control-subpath v-if="selected" v-for="subpathAddr in subpaths" :key="subpathAddr" :addr="subpathAddr" />
+		<control-subpath v-if="selected" v-for="subpathAddr in subpaths" :key="subpathAddr" :addr="subpathAddr" :layer="layer" />
 	</g>
 </template>
 
@@ -8,7 +8,7 @@
 import _ from 'lodash';
 import ControlSubpath from './control-subpath.vue';
 export default {
-	props: ['addr'],
+	props: ['addr','layer'],
 	components: { ControlSubpath },
 	computed: {
 		subpaths: function() {
