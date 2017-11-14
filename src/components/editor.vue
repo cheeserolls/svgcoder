@@ -140,6 +140,7 @@ export default {
 
 				console.log('editor keydown '+e.key);
 				this.$app.$emit('editorKeydown',e);
+				if (e.handled) {return;}
 
 				for (var tool of this.$store.state.editor.tools) {
 					if (tool.hotkey === e.key) {
