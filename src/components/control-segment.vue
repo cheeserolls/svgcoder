@@ -1,6 +1,6 @@
 <template>
 	<g class="control-segment" :data-addr="addr">
-		<path v-if="layer == 'guides'" class="segment-trace" :data-addr="addr" :d="d" />
+		<path v-if="layer == 'guides'" :class="traceCssClass" :data-addr="addr" :d="d" />
 		<guide-line v-if="layer == 'guides'" v-for="gl in guideLines" :key="gl.key" :start="gl.start" :end="gl.end" />
 		<point-marker v-if="layer == 'markers'" v-for="pointAddr in this.points" :key="pointAddr" :pointAddr="pointAddr" :guide="false" />
 		<point-marker v-if="layer == 'markers'" v-for="pointAddr in this.guidePoints" :key="pointAddr" :pointAddr="pointAddr" :guide="true" />
@@ -25,6 +25,15 @@ export default {
 	props: ['addr','pathSelected','layer'],
 	components: { GuideLine, PointMarker, HSegmentEndMarker, VSegmentEndMarker/*, ASegmentRadiusMarker, ASegmentRotationMarker*/ },
 	computed: {
+		selected: function() {
+			return _.includes(this.$store.state.editor.selectedSegments, this.addr);
+		},
+		traceCssClass: function() {
+			return {
+				'segment-trace': true,
+				'selected': this.selected
+			};
+		},
 		d: function() {
 			var segment = wrappers.segment(this.addr);
 			var ucType = segment.type.toUpperCase();

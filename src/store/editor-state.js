@@ -15,10 +15,10 @@ export default {
 		},
 		gridWidth: 1,
 		snapToGrid: false,
-		selectedMarkers: [],
-		selectedPoints: [],
 		selectedPaths: [],
 		selectedSegments: [],
+		selectedPoints: [],
+		selectedMarkers: [],
 		tools: [],
 		currentToolName: null,
 	},
@@ -50,55 +50,35 @@ export default {
 		},
 		deselect: function(state) {
 			state.selectedPaths = [];
-			state.selectedPoints = [];
 			state.selectedSegments = [];
+			state.selectedPoints = [];
+			state.selectedMarkers = [];
 		},
-		updateSelectedPaths: function(state, payload) {
-			switch (payload.action) {
-				case 'replace':
-					state.selectedPaths = payload.paths;
-					break;
-				case 'add':
-					state.selectedPaths = _.union(state.selectedPaths, payload.paths);
-					break;
-				case 'remove':
-					state.selectedPaths = _.difference(state.selectedPaths, payload.paths);
-					break;
-				case 'deselect':
-					state.selectedPaths = [];
-					break;
-			}
-		},
-		updateSelectedPoints: function(state, payload) {
-			switch (payload.action) {
-				case 'replace':
-					state.selectedPoints = payload.points;
-					break;
-				case 'add':
-					state.selectedPoints = _.union(state.selectedPoints, payload.points);
-					break;
-				case 'remove':
-					state.selectedPoints = _.difference(state.selectedPoints, payload.points);
-					break;
-				case 'deselect':
-					state.selectedPoints = [];
-					break;
-			}
-		},
-		updateSelectedMarkers: function(state, payload) {
-			switch (payload.action) {
-				case 'replace':
-					state.selectedMarkers = payload.points;
-					break;
-				case 'add':
-					state.selectedMarkers = _.union(state.selectedMarkers, payload.markers);
-					break;
-				case 'remove':
-					state.selectedMarkers = _.difference(state.selectedMarkers, payload.markers);
-					break;
-				case 'deselect':
-					state.selectedMarkers = [];
-					break;
+		updateSelection: function(state, payload) {
+			var types = {
+				paths:'selectedPaths',
+				segments:'selectedSegments',
+				points:'selectedPoints',
+				markers:'selectedMarkers'
+			};
+			for (var type in types) {
+				if (payload[type]) {
+					var substate = types[type];
+					switch (payload.action) {
+						case 'replace':
+							state[substate] = payload[type];
+							break;
+						case 'add':
+							state[substate] = _.union(state[substate], payload[type]);
+							break;
+						case 'remove':
+							state[substate] = _.difference(state[substate], payload[type]);
+							break;
+						case 'deselect':
+							state[substate] = [];
+							break;
+					}
+				}
 			}
 		},
 		selectTool: function(state, payload) {

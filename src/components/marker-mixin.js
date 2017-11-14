@@ -43,7 +43,7 @@ export default {
 						var action = 'add';
 						break;
 				}
-				this.$store.commit('updateSelectedMarkers', {action: action, markers: [this.addr]});
+				this.$store.commit('updateSelect', {action: action, markers: [this.addr]});
 			}
 		},
 		moveStart: function(e) {

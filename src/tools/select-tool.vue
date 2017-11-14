@@ -39,30 +39,32 @@ export default {
 	},
 	methods: {
 		click: function(e) {
+
 			console.log('select click on',e.target);
-			if ( e.target instanceof SVGPathElement ) {
-
-				var pathAddr = e.target.getAttribute('data-addr');
-				var selected = _.includes(this.$store.state.editor.selectedPaths, pathAddr);
-
-				if (e.shiftKey) {
-					if ( selected ) {
-						this.$store.commit('updateSelectedPaths', {action:'remove', paths:[pathAddr]});
-					} else {
-						this.$store.commit('updateSelectedPaths', {action:'add', paths:[pathAddr]});
-					}
-				} else {
-					this.$store.commit('updateSelectedPaths', {action:'replace', paths:[pathAddr]});
-				}
+			if ( e.target.classList.contains('segment-trace') ) {
+				var segmentAddr = e.target.getAttribute('data-addr');
+				this.$store.commit('updateSelection', {action:'deselect', points: true, markers: true});
+				this.$store.commit('updateSelection', {action:'replace', segments:[segmentAddr]});
 
 			} else if ( e.target.classList.contains('marker') ) {
-
 				if (e.shiftKey) {
 					this.$app.$emit('markerSelect', {action: 'toggle', target: e.target});
 				} else {
-					this.$store.commit('updateSelectedPoints', {action: 'deselect'});
-					this.$store.commit('updateSelectedMarkers', {action: 'deselect'});
+					this.$store.commit('updateSelection', {action: 'deselect', points: true, markers: true});
 					this.$app.$emit('markerSelect', {action: 'select', target: e.target});
+				}
+
+			} else if ( e.target instanceof SVGPathElement ) {
+				var pathAddr = e.target.getAttribute('data-addr');
+				var selected = _.includes(this.$store.state.editor.selectedPaths, pathAddr);
+				if (e.shiftKey) {
+					if ( selected ) {
+						this.$store.commit('updateSelection', {action:'remove', paths:[pathAddr]});
+					} else {
+						this.$store.commit('updateSelection', {action:'add', paths:[pathAddr]});
+					}
+				} else {
+					this.$store.commit('updateSelection', {action:'replace', paths:[pathAddr]});
 				}
 
 			} else {
@@ -80,6 +82,7 @@ export default {
 			marquee.style.height = '0px';
 		},
 		dragupdate: function(e) {
+
 			marquee.style.left = Math.min(e.pageX, this.pageDragStart.x) + 'px';
 			marquee.style.top = Math.min(e.pageY, this.pageDragStart.y) + 'px';
 			marquee.style.width = Math.abs(e.pageX - this.pageDragStart.x) + 'px';
@@ -96,8 +99,7 @@ export default {
 			};
 
 			if (!e.shiftKey) {
-				this.$store.commit('updateSelectedPoints', {action: 'deselect'});
-				this.$store.commit('updateSelectedMarkers', {action: 'deselect'});
+				this.$store.commit('updateSelection', {action: 'deselect', points: true, markers: true});
 			}
 			this.$app.$emit('markerSelect', {action: 'select', range: range});
 
