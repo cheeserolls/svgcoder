@@ -42,7 +42,7 @@ export default {
 						var action = 'add';
 						break;
 				}
-				this.$store.commit('updateSelectedPoints', {action: action, points: [this.addr]});
+				this.$store.commit('updateSelection', {action: action, points: [this.addr]});
 			}
 		},
 		moveTo: function(x,y) {
