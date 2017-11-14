@@ -67,13 +67,13 @@ PathParser.prototype.parseSegment = function() {
 		case 'l': case 'c': case 's': case 'q': case 't':
 			// Add a line or curve to the current subpath
 			var segment = {type: command, end: {}};
-			if ( lcCommand == 'c' || lcCommand == 's' || lcCommand == 'q' ) {
+			if ( lcCommand == 'c' || lcCommand == 'q' ) {
 				segment.c0 = {
 					x: ( relative ? this.currentX : 0 ) + this._parseNumber(),
 					y: ( relative ? this.currentY : 0 ) + this._parseNumber()
 				};
 			}
-			if ( lcCommand == 'c' ) {
+			if ( lcCommand == 'c' || lcCommand == 's' ) {
 				segment.c1 = {
 					x: ( relative ? this.currentX : 0 ) + this._parseNumber(),
 					y: ( relative ? this.currentY : 0 ) + this._parseNumber()

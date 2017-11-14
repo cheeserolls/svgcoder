@@ -1,5 +1,6 @@
 <template>
 	<g class="control-segment" :data-addr="addr">
+		<path class="segment-trace" :data-addr="addr" :d="d" />
 		<guide-line v-for="gl in guideLines" :key="gl.key" :start="gl.start" :end="gl.end" />
 		<point-marker v-for="pointAddr in this.points" :key="pointAddr" :pointAddr="pointAddr" :guide="false" />
 		<point-marker v-for="pointAddr in this.guidePoints" :key="pointAddr" :pointAddr="pointAddr" :guide="true" />
@@ -24,6 +25,44 @@ export default {
 	props: ['addr','pathSelected'],
 	components: { GuideLine, PointMarker, HSegmentEndMarker, VSegmentEndMarker/*, ASegmentRadiusMarker, ASegmentRotationMarker*/ },
 	computed: {
+		d: function() {
+			var segment = wrappers.segment(this.addr);
+			var ucType = segment.type.toUpperCase();
+			var start = this.$app.userToViewport(segment.start);
+			var end = this.$app.userToViewport(segment.end);
+			var values = ['M', start.x, start.y];
+
+			switch (ucType) {
+				case 'L': case 'H': case 'V': case 'Z':
+					values.push( 'L', end.x, end.y );
+					break;
+				case 'C':
+					var c0 = this.$app.userToViewport(segment.c0);
+					var c1 = this.$app.userToViewport(segment.c1);
+					values.push( 'C', c0.x, c0.y, c1.x, c1.y, end.x, end.y );
+					break;
+				case 'S':
+					var s0 = this.$app.userToViewport(segment.s0);
+					var c1 = this.$app.userToViewport(segment.c1);
+					values.push( 'C', s0.x, s0.y, c1.x, c1.y, end.x, end.y );
+					break;
+				case 'Q':
+					var c0 = this.$app.userToViewport(segment.c0);
+					values.push( 'Q', c0.x, c0.y, end.x, end.y );
+					break;
+				case 'T':
+					var s0 = this.$app.userToViewport(segment.s0);
+					values.push( 'C', s0.x, s0.y, end.x, end.y );
+					break;
+				case 'A':
+					var rx = segment.data.radiusX * this.$store.state.editor.scale;
+					var ry = segment.data.radiusY * this.$store.state.editor.scale;
+					values.push( 'A', rx, ry, segment.data.rot, segment.data.arc, segment.data.sweep, end.x, end.y );
+					break;
+			}
+
+			return values.join(' ');
+		},
 		points: function() {
 			var segmentData = this.$store.state.drawing.segments[this.addr];
 			var points = [];

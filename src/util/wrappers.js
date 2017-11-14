@@ -95,7 +95,7 @@ Object.defineProperty(Segment.prototype, 'start', {enumerable: true, get: functi
 }});
 
 Object.defineProperty(Segment.prototype, 'end', {enumerable: true, get: function(){
-	switch(this.data.type) {
+	switch(this.type) {
 		case 'h': case 'H':
 			return {x: this.data.endX, y: this.start.y};
 		case 'v': case 'V':
@@ -113,6 +113,14 @@ Object.defineProperty(Segment.prototype, 'c0', {enumerable: true, get: function(
 
 Object.defineProperty(Segment.prototype, 'c1', {enumerable: true, get: function(){
 	return this.data.c1 ? new Point(this.data.c1) : null;
+}});
+
+Object.defineProperty(Segment.prototype, 's0', {enumerable: true, get: function(){
+	var prev = this.prev;
+	var c = prev ? ( prev.c1 || prev.c0 || null ) : null;
+	if (!c) { return null; }
+	var start = this.start;
+	return {x: start.x + start.x - c.x, y: start.y + start.y - c.y};
 }});
 
 

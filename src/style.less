@@ -80,6 +80,23 @@ html {
 		fill: none;
 		stroke-dasharray: 5,5;
 	}
+	.segment-trace {
+		pointer-events: auto;
+		stroke-width: 5;
+		stroke: url(#selection-pattern);
+		fill: none;
+		&:hover {
+			stroke: url(#selected-pattern);
+		}
+	}
+	#selected-pattern {
+		.a {fill: rgba(255,0,0,0.8);}
+		.b {fill: rgba(255,255,255,0.5);}
+	}
+	#selection-pattern {
+		.a {fill: rgba(0,0,0,0.5);}
+		.b {fill: rgba(255,255,255,0.5);}
+	}
 }
 
 .marker {
