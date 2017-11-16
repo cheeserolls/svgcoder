@@ -21,6 +21,7 @@
 
 <script>
 import cache from '../drawing/cache.js';
+import geom from '../drawing/geom.js';
 export default {
 	data: function() {
 		return {
@@ -106,9 +107,9 @@ export default {
 				var path = this.path;
 				var pathAddr = this.pathAddr;
 			} else {
-				var pathData = {type:'path', class: 'st0', subpaths:[]};
-				var pathAddr = this.pathAddr = a.getAddr(pathData);
-				this.$store.commit('addNode',{addr: pathAddr, data: pathData, parentAddr: null, position: 'end'});
+				var pathData = {nodeName:'path', class: 'st0', subpaths:[]};
+				var pathAddr = this.pathAddr = this.$app.$drawingAddresser.getAddr(pathData);
+				this.$store.commit('addNode',{addr: pathAddr, data: pathData});
 				var rootAddr = this.$store.state.drawing.rootNode;
 				var existingChildren = this.$store.state.drawing.nodes[rootAddr].children;
 				this.$store.commit('updateNodeData',{addr: rootAddr, name: 'children', value: _.concat(existingChildren, pathAddr)});
@@ -131,9 +132,9 @@ export default {
 			this.pointNameQueue = [];
 		},
 		deleteCurrentSegment: function(cascadeSubpath, cascadePath) {
-			var numSubpathsInPath = this.path.data.subpaths.length;
-			var numSegmentsInSubpath = this.currentSubpath.segments.length;
 			if (this.currentSubpath && this.currentSegment) {
+				var numSubpathsInPath = this.path.data.subpaths.length;
+				var numSegmentsInSubpath = this.currentSubpath.segments.length;
 				this.currentSubpath.deleteSegment( this.currentSegment.index );
 				if (cascadeSubpath && numSegmentsInSubpath == 1) {
 					// if there was only one segment in the subpath, then delete the (now empty) subpath too

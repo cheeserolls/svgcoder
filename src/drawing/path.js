@@ -19,6 +19,10 @@ export default Vue.extend({
 			var subpathAddr = this.data.subpaths[0];
 			return subpathAddr ? cache.get('subpaths', subpathAddr) : null;
 		},
+		lastSubpath: function() {
+			var subpathAddr = this.data.subpaths[this.data.subpaths.length - 1];
+			return subpathAddr ? cache.get('subpaths', subpathAddr) : null;
+		},
 		d: function() {
 			var values = _.reduce( this.subpaths, function(valuesSoFar, subpath) {
 				return valuesSoFar.concat( subpath.d );

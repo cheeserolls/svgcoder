@@ -62,6 +62,11 @@ export default {
 			}
 			options.push({type:'A', label:'A - Arc (absolute)'});
 			options.push({type:'a', label:'a - Arc (relative)'});
+			if (this.segment.nexr == null) {
+				options.push({type:'Z', label:'Z - Close path (absolute)'});
+				options.push({type:'z', label:'z - Close path (relative)'});
+			}
+
 			for (var i=0; i<options.length; i++) {
 				options[i].selected = (this.type == options[i].type);
 			}

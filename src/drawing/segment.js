@@ -277,18 +277,22 @@ export default Vue.extend({
 		},
 		changeType: function(newType) {
 			var newTypeLc = newType.toLowerCase();
+			if (this.type == newType) {return;}
 			if (newTypeLc == 'z' && this.next) {
 				throw new Error('Not last segment in subpath - Cannot change segment type to '+newType);
 			}
-			if (newTypeLc == 's' && (!this.prev || !_.includes(['c','s'], this.prev.type))) {
+			if (newTypeLc == 's' && (!this.prev || !_.includes(['c','s'], this.prev.typeLc))) {
 				throw new Error('Segment type c must follow from a segment type c or s');
 			}
-			if (newTypeLc == 't' && (!this.prev || !_.includes(['q'], this.prev.type))) {
+			if (newTypeLc == 't' && (!this.prev || !_.includes(['q'], this.prev.typeLc))) {
 				throw new Error('Segment type t must follow from a segment type q');
 			}
-			if (this.type == newType) {return;}
-			this.$store.commit('updateNodeData', {addr: this.addr, name:'type', value: newType});
-			if (this.typeLc == newTypeLc) {return;}
+
+			if (this.typeLc == newTypeLc) {
+				// only the 'relativity' is changing, but it's otherwise the same segment type, so can quit early
+				this.$store.commit('updateNodeData', {addr: this.addr, name:'type', value: newType});
+				return;
+			}
 
 			var a = this.$app.$drawingAddresser;
 			var mightHave = ['c0','c1','end'];
@@ -304,14 +308,14 @@ export default Vue.extend({
 				}
 			}
 			if (!this.data.c0 && _.includes(shouldHave,'c0')) {
-				var pos = _.includes(['s','t'],this.typeLc) ? this.s0 : this.positionAt( newTypeLc=='c' ? 1/3 : 1/2 );
+				var pos = _.includes(['s','t'],this.typeLc) ? this.s0 : geom.interpolate( newTypeLc=='c' ? 1/3 : 1/2, this.start, this.end );
 				var data = {nodeName: 'point', parent: this.addr, x: pos.x, y: pos.y};
 				var addr = a.getAddr(data);
 				this.$store.commit('addNode',{addr: addr, data: data});
 				this.$store.commit('updateNodeData', {addr: this.addr, name:'c0', value: addr});
 			}
 			if (!this.data.c1 && _.includes(shouldHave,'c1')) {
-				var pos = this.positionAt( 2/3 );
+				var pos = geom.interpolate( 2/3, this.start, this.end );
 				var data = {nodeName: 'point', parent: this.addr, x: pos.x, y: pos.y};
 				var addr = a.getAddr(data);
 				this.$store.commit('addNode',{addr: addr, data: data});
@@ -347,6 +351,8 @@ export default Vue.extend({
 				this.$store.commit('removeNodeData', {addr: this.addr, name:'arc'});
 				this.$store.commit('removeNodeData', {addr: this.addr, name:'sweep'});
 			}
+
+			this.$store.commit('updateNodeData', {addr: this.addr, name:'type', value: newType});
 		},
 		delete: function() {
 			// Note this should not be called directly - instead call from via the subpath - subpathObj.deleteSegment(index)

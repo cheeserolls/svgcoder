@@ -76,7 +76,7 @@ export default Vue.extend({
 			var pointNames = [];
 			if (_.includes(['c','q'],typeLc)) {pointNames.push('c0');}
 			if (_.includes(['c','s'],typeLc)) {pointNames.push('c1');}
-			if (_.includes(['l','c','s','q','t','a'],newTypeLc)) {pointNames.push('end');}
+			if (_.includes(['l','c','s','q','t','a'],typeLc)) {pointNames.push('end');}
 
 			for (var pointName of pointNames) {
 				var pointData = {nodeName: 'point', parent: segmentAddr, x: endX, y: endY};

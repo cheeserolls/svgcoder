@@ -92,6 +92,8 @@ export default {
 
 		},
 		mousedown: function(e) {
+			// only react to main mouse button (not right click)
+			if (e.button != 0) {return;}
 			var self = this;
 			var mouseStart = {x: e.pageX, y: e.pageY};
 			var extendDragEvent = function(e) {

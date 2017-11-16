@@ -123,6 +123,7 @@ export default {
 		this.addTool('select','Select',SelectTool,{hotkey:'s'});
 		this.addTool('move','Move',MoveTool,{hotkey:'m'});
 		this.addTool('draw','Draw',DrawTool,{hotkey:'d'});
+		this.$store.commit('selectTool',{toolName: 'select'});
 	},
 	mounted: function() {
 		this.$drawingAddresser = new Addresser();

@@ -35,7 +35,17 @@ export default {
 			};
 		},
 		d: function() {
-			var userValues = ['M', this.segment.start.x, this.segment.start.y].concat(this.segment.absoluteValues);
+			// Create a path which is the same shape as this path segment, and in the same place, but in viewport coords
+			var userValues = ['M', this.segment.start.x, this.segment.start.y];
+			if (this.segment.typeLc == 'z') {
+				userValues = userValues.concat(['L', this.segment.end.x, this.segment.end.y]);
+			} else if (this.segment.typeLc == 's') {
+				userValues = userValues.concat(['C', this.segment.s0.x, this.segment.s0.y, this.segment.c1.x, this.segment.c1.y, this.segment.end.x, this.segment.end.y]);
+			} else if (this.segment.typeLc == 't') {
+				userValues = userValues.concat(['Q', this.segment.s0.x, this.segment.s0.y, this.segment.end.x, this.segment.end.y]);
+			} else {
+				userValues = userValues.concat(this.segment.absoluteValues);
+			}
 			var viewportValues = this.$app.userPathToViewportPath(userValues);
 			return viewportValues.join(' ');
 		},

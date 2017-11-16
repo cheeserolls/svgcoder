@@ -24,12 +24,12 @@ export default {
 		updateNodeData: function(state, payload) {
 			var node = state.nodes[payload.addr];
 			if (!node) {throw new RangeError(`No node exists with address ${payload.addr}`);}
-			node[payload.name] = payload.value;
+			Vue.set(node, payload.name, payload.value);
 		},
 		removeNodeData: function(state, payload) {
 			var node = state.nodes[payload.addr];
 			if (!node) {throw new RangeError(`No node exists with address ${payload.addr}`);}
-			delete node[payload.name];
+			Vue.delete(node, payload.name);
 		},
 		updatePoints: function(state, payload) {
 			for (var update of payload.updates) {

@@ -7,8 +7,8 @@ var _interpolateN = function(t,s,points) {
 		var newPoints = Array(n);
 		for (var i=0; i<n; i++) {
 			newPoints[i] = {
-				x: s * points[i].x + t * points[i].x,
-				y: s * points[i].y + t * points[i].y
+				x: s * points[i].x + t * points[i+1].x,
+				y: s * points[i].y + t * points[i+1].y
 			};
 		}
 		return _interpolateN(t,s,newPoints);
