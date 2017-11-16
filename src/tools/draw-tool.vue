@@ -82,117 +82,71 @@ export default {
 		},
 	},
 	methods: {
+		pointNamesFor: function(typeLc) {
+			switch (typeLc) {
+				case 'l': case 'h': case 'v': case 't': case 'a':
+					return ['end'];
+				case 'c':
+					return ['end','c0','c1'];
+				case 'q':
+					return ['end','c0'];
+				case 's':
+					return ['end','c1'];
+			}
+		},
 		changeType: function(typeLc) {
 			if (this.currentSegment) {
-				var endX = this.currentSegment.end.x;
-				var endY = this.currentSegment.end.y;
-				this.deleteCurrentSegment(false, false);
+				this.currentSegment.changeType( this.relative ? typeLc : typeLc.toUpperCase() );
+				this.pointNameQueue = this.pointNamesFor(typeLc);
 				this.nextTypeLc = typeLc;
-				this.newSegment(this.currentSubpath.addr, endX, endY);
 			}
 		},
 		newSubpath: function(x,y) {
-			console.log('newSubpath');
-			var a = this.$app.$drawingAddresser;
-			if (this.pathAddr) {
+			if (this.path) {
+				var path = this.path;
 				var pathAddr = this.pathAddr;
 			} else {
 				var pathData = {type:'path', class: 'st0', subpaths:[]};
-				var pathAddr = a.getAddr(pathData);
+				var pathAddr = this.pathAddr = a.getAddr(pathData);
 				this.$store.commit('addNode',{addr: pathAddr, data: pathData, parentAddr: null, position: 'end'});
-				this.pathAddr = pathAddr;
+				var rootAddr = this.$store.state.drawing.rootNode;
+				var existingChildren = this.$store.state.drawing.nodes[rootAddr].children;
+				this.$store.commit('updateNodeData',{addr: rootAddr, name: 'children', value: _.concat(existingChildren, pathAddr)});
+				var path = cache.get('paths', pathAddr);
 			}
-			var subpathData = {parent: pathAddr, relative: this.relative, segments:[]};
-			var subpathAddr = a.getAddr(subpathData);
-			var startData = {parent: pathAddr, x: x, y: y};
-			var startAddr = a.getAddr(startData);
-			subpathData.start = startAddr;
-			this.$store.commit('addPoint',{addr: startAddr, data: startData});
-			this.$store.commit('addSubpath',{addr: subpathAddr, data: subpathData, pathAddr: pathAddr, position: 'end'});
-			this.$store.commit('deselect');
+			var subpathAddr = path.addSubpath(this.relative, x, y);
 			this.$store.commit('updateSelection',{action:'replace', paths:[pathAddr]});
 			this.newSegment(subpathAddr, x, y);
 		},
-		newSegment: function(subpathAddr, x, y) {
-			console.log('newSegment');
-			var a = this.$app.$drawingAddresser;
-			var segmentData = {parent: subpathAddr, type: this.nextType};
-			var segmentAddr = a.getAddr(segmentData);
-			switch (this.nextTypeLc) {
-				case 'l': case 't':
-					var pointNames = ['end'];
-					break;
-				case 'c':
-					var pointNames = ['end','c0','c1'];
-					break;
-				case 'q':
-					var pointNames = ['end','c0'];
-					break;
-				case 's':
-					var pointNames = ['end','c1'];
-					break;
-				case 'h':
-					var pointNames = ['_end_'];
-					segmentData.endX = x;
-					break;
-				case 'v':
-					var pointNames = ['_end_'];
-					segmentData.endY = y;
-					break;
-				case 'a':
-					var pointNames = ['end'];
-					segmentData.radiusX = 10;
-					segmentData.radiusY = 20;
-					segmentData.rot = 0;
-					segmentData.arc = 0;
-					segmentData.sweep = 0;
-					break;
-			}
-			for (var pointName of pointNames) {
-				if (pointName == '_end_') {continue;}
-				var pointData = {parent: segmentAddr, x: x, y: y};
-				var pointAddr = a.getAddr(pointData);
-				segmentData[pointName] = pointAddr;
-				this.$store.commit('addPoint',{addr: pointAddr, data: pointData});
-			}
-			this.$store.commit('addSegment',{addr: segmentAddr, data: segmentData, subpathAddr: subpathAddr, position: 'end'});
+		newSegment: function(subpathAddr, endX, endY) {
+			var subpath = cache.get('subpaths',subpathAddr);
+			var segmentAddr = subpath.addSegment(this.nextType, endX, endY);
 			this.$store.commit('updateSelection',{action:'replace', segments:[segmentAddr]});
-			this.pointNameQueue = pointNames;
+			this.pointNameQueue = this.pointNamesFor(this.nextTypeLc);
 		},
 		closeSubpath: function(subpathAddr) {
-			console.log('closeSubpath');
-			var a = this.$app.$drawingAddresser;
-			var segmentData = {parent: subpathAddr, type: this.relative ? 'z' : 'Z'};
-			var segmentAddr = a.getAddr(segmentData);
-			this.$store.commit('addSegment',{addr: segmentAddr, data: segmentData, subpathAddr: subpathAddr, position: 'end'});
+			var subpath = cache.get('subpaths',subpathAddr);
+			var segmentAddr = subpath.addSegment( this.relative ? 'z' : 'Z' );
+			this.$store.commit('updateSelection',{action:'deselect', segments:true});
+			this.pointNameQueue = [];
 		},
 		deleteCurrentSegment: function(cascadeSubpath, cascadePath) {
-			if (! this.currentSegment) {return;}
 			var numSubpathsInPath = this.path.data.subpaths.length;
 			var numSegmentsInSubpath = this.currentSubpath.segments.length;
-			for (var pointName of ['end','c0','c1']) {
-				var point = this.currentSegment[pointName];
-				if (point) {
-					this.$store.commit('updateSelection',{action:'remove', points:[point.addr]});
-					this.$store.commit('deletePoint',{addr: point.addr});
-				}
-			}
-			this.$store.commit('updateSelection',{action:'remove', segments:[this.currentSegment.addr]});
-			this.$store.commit('deleteSegment',{addr: this.currentSegment.addr});
-			if (cascadeSubpath && numSegmentsInSubpath == 1) {
-				// if there was only one segment in the subpath, then delete the (now empty) subpath too
-				var subpathAddr = this.currentSubpath.addr;
-				this.$store.commit('deleteSubpath',{addr: subpathAddr});
-				// if there was only one subpath in the path, then delete the (now empty) path too
-				if (cascadePath && numSubpathsInPath == 1) {
-					this.$store.commit('updateSelection',{action:'remove', paths:[this.pathAddr]});
-					this.$store.commit('deleteNode',{addr: this.pathAddr});
-					this.pathAddr = null;
+			if (this.currentSubpath && this.currentSegment) {
+				this.currentSubpath.deleteSegment( this.currentSegment.index );
+				if (cascadeSubpath && numSegmentsInSubpath == 1) {
+					// if there was only one segment in the subpath, then delete the (now empty) subpath too
+					this.path.deleteSubpath( this.currentSubpath.index );
+					// if there was only one subpath in the path, then delete the (now empty) path too
+					if (cascadePath && numSubpathsInPath == 1) {
+						this.path.parent.deleteChild( this.path.index );
+						this.pathAddr = null;
+					}
 				}
 			}
 		},
 		click: function(e) {
-			console.log('click');
 			var p = this.$app.mouseEventToUser(e);
 			if (this.pointNameQueue.length) {
 				this.mousemove(e);
@@ -207,27 +161,22 @@ export default {
 		mousemove: function(e) {
 			var p = this.$app.mouseEventToUser(e);
 			if (this.currentSegment && this.pointNameQueue.length) {
-				if (this.currentTypeLc == 'h') {
-					this.$store.commit('updateSegmentData',{addr: this.currentSegment.addr, name: 'endX', value: p.x});
-				} else if (this.currentTypeLc == 'v') {
-					this.$store.commit('updateSegmentData',{addr: this.currentSegment.addr, name: 'endY', value: p.y});
-				} else {
-					var start = this.currentSegment.start;
-					var end = ( this.pointNameQueue[0] == 'end' ? p : this.currentSegment.end );
-					var updates = [];
-					for (var i=0; i<this.pointNameQueue.length; i++) {
-						var pointName = this.pointNameQueue[i];
-						var point = this.currentSegment[pointName];
-						if (i > 0 && pointName == 'c0') {
-							updates.push({addr: point.addr, x: start.x * 0.7 + end.x * 0.3, y: start.y * 0.7 + end.y * 0.3});
-						} else if (i > 0 && pointName == 'c1') {
-							updates.push({addr: point.addr, x: start.x * 0.3 + end.x * 0.7, y: start.y * 0.3 + end.y * 0.7});
-						} else {
-							// always put the current point right at the cursor
-							updates.push({addr: point.addr, x: p.x, y: p.y});
-						}
+				var start = this.currentSegment.start;
+				var end = ( this.pointNameQueue[0] == 'end' ? p : this.currentSegment.end );
+				var updates = [];
+				for (var i=0; i<this.pointNameQueue.length; i++) {
+					var pointName = this.pointNameQueue[i];
+					var point = this.currentSegment[pointName];
+					if (i > 0 && pointName == 'c0') {
+						var pos = geom.interpolate(1/3, start, end);
+						this.currentSegment.movePoint(pointName, pos.x, pos.y);
+					} else if (i > 0 && pointName == 'c1') {
+						var pos = geom.interpolate(2/3, start, end);
+						this.currentSegment.movePoint(pointName, pos.x, pos.y);
+					} else {
+						// always put the current point right at the cursor
+						this.currentSegment.movePoint(pointName, p.x, p.y);
 					}
-					this.$store.commit('updatePoints',{updates: updates});
 				}
 			}
 		},
@@ -240,14 +189,14 @@ export default {
 					this.pointNameQueue = [];
 					this.$store.commit('deselect');
 					e.handled = true;
-					break;
+					return;
 				case 'z':
 					// remove the current segment, close the current subpath, and start a new subpath
 					this.deleteCurrentSegment(true, false);
 					this.closeSubpath(this.currentSubpath.addr);
 					this.pointNameQueue = [];
 					e.handled = true;
-					break;
+					return;
 			}
 			for (var option of this.options) {
 				if (option.typeLc == e.key) {

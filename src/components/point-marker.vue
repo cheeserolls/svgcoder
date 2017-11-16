@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import cache from '../drawing/cache.js';
 import _ from 'lodash';
 import markerMixin from './marker-mixin.js';
 import wrappers from '../util/wrappers.js';
@@ -10,11 +11,14 @@ export default {
 	mixins: [markerMixin],
 	props: ['pointAddr','guide'],
 	computed: {
+		addr: function() {
+			return this.pointAddr;
+		},
 		point: function() {
-			return this.$store.state.drawing.points[this.addr];
+			return cache.get('points', this.addr);
 		},
 		selected: function() {
-			return _.includes(this.$store.state.editor.selectedPoints, this.addr);
+			return this.point.selected;
 		},
 		cssClass: function() {
 			return {
@@ -24,9 +28,6 @@ export default {
 				guide: this.guide
 			};
 		},
-		addr: function() {
-			return this.pointAddr;
-		}
 	},
 	methods: {
 		select: function(e) {

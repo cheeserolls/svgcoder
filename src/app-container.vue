@@ -45,6 +45,73 @@ export default {
 				y: p.y * this.$store.state.editor.scale + this.$store.state.editor.canvasOffset.y
 			};
 		},
+		userPathToViewportPath: function(values) {
+			var out = [];
+			var i = 0;
+			var copyVals = (n) => {
+				while (n--) {
+					out.push(values[i++]);
+				}
+			};
+			var copyScaleVals = (n) => {
+				while (n--) {
+					out.push( values[i++] * this.$store.state.editor.scale );
+				}
+			};
+			var copyTransformedPoints = (n) => {
+				while (n--) {
+					var x = values[i++];
+					var y = values[i++];
+					var p = this.userToViewport({x: x, y: y});
+					out.push(p.x);
+					out.push(p.y);
+				}
+			};
+			var doGroup = () => {
+				var type = values[i];
+				copyVals(1);
+				var typeLc = type.toLowerCase();
+				var relative = (type == typeLc);
+				switch (typeLc) {
+					case 'm': case 'l': case 't':
+						relative ? copyScaleVals(2) : copyTransformedPoints(1);
+						return;
+					case 'h':
+						if ( relative ) {
+							copyScaleVals(1);
+						} else {
+							var x = values[i++];
+							var p = this.userToViewport({x: x, y: 0});
+							out.push(p.x);
+						}
+						return;
+					case 'v':
+						if ( relative ) {
+							copyScaleVals(1);
+						} else {
+							var x = values[i++];
+							var p = this.userToViewport({x: 0, y: y});
+							out.push(p.y);
+						}
+						return;
+					case 'c':
+						relative ? copyScaleVals(6) : copyTransformedPoints(3);
+						return;
+					case 's': case 'q':
+						relative ? copyScaleVals(4) : copyTransformedPoints(2);
+						return;
+					case 'a':
+						copyScaleVals(2);
+						copyVals(3);
+						relative ? copyScaleVals(2) : copyTransformedPoints(1);
+						return;
+					case 'z':
+						return
+				}
+			};
+			while (i < values.length) {doGroup();}
+			return out;
+		},
 		addTool: function(name, label, component, opts) {
 			this.$tools[name] = component;
 			this.$store.commit('addTool', _.defaults({name: name, label: label}, opts));

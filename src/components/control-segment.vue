@@ -14,134 +14,69 @@
 </template>
 
 <script>
+import cache from '../drawing/cache.js';
 import PointMarker from './point-marker.vue';
 import GuideLine from './control-guide-line.vue';
 import HSegmentEndMarker from './h-segment-end-marker.vue';
 import VSegmentEndMarker from './v-segment-end-marker.vue';
 //import ASegmentRadiusMarker from './a-segment-radius-marker.vue';
 //import ASegmentRotationMarker from './a-segment-rotation-marker.vue';
-import wrappers from '../util/wrappers.js';
 export default {
-	props: ['addr','pathSelected','layer'],
+	props: ['addr','layer'],
 	components: { GuideLine, PointMarker, HSegmentEndMarker, VSegmentEndMarker/*, ASegmentRadiusMarker, ASegmentRotationMarker*/ },
 	computed: {
-		selected: function() {
-			return _.includes(this.$store.state.editor.selectedSegments, this.addr);
+		segment: function() {
+			return cache.get('segments', this.addr);
 		},
 		traceCssClass: function() {
 			return {
 				'segment-trace': true,
-				'selected': this.selected
+				'selected': this.segment.selected
 			};
 		},
 		d: function() {
-			var segment = wrappers.segment(this.addr);
-			var ucType = segment.type.toUpperCase();
-			var start = this.$app.userToViewport(segment.start);
-			var end = this.$app.userToViewport(segment.end);
-			var values = ['M', start.x, start.y];
-
-			switch (ucType) {
-				case 'L': case 'H': case 'V': case 'Z':
-					values.push( 'L', end.x, end.y );
-					break;
-				case 'C':
-					var c0 = this.$app.userToViewport(segment.c0);
-					var c1 = this.$app.userToViewport(segment.c1);
-					values.push( 'C', c0.x, c0.y, c1.x, c1.y, end.x, end.y );
-					break;
-				case 'S':
-					var s0 = this.$app.userToViewport(segment.s0);
-					var c1 = this.$app.userToViewport(segment.c1);
-					values.push( 'C', s0.x, s0.y, c1.x, c1.y, end.x, end.y );
-					break;
-				case 'Q':
-					var c0 = this.$app.userToViewport(segment.c0);
-					values.push( 'Q', c0.x, c0.y, end.x, end.y );
-					break;
-				case 'T':
-					var s0 = this.$app.userToViewport(segment.s0);
-					values.push( 'C', s0.x, s0.y, end.x, end.y );
-					break;
-				case 'A':
-					var rx = segment.data.radiusX * this.$store.state.editor.scale;
-					var ry = segment.data.radiusY * this.$store.state.editor.scale;
-					values.push( 'A', rx, ry, segment.data.rot, segment.data.arc, segment.data.sweep, end.x, end.y );
-					break;
-			}
-
-			return values.join(' ');
+			var userValues = ['M', this.segment.start.x, this.segment.start.y].concat(this.segment.absoluteValues);
+			var viewportValues = this.$app.userPathToViewportPath(userValues);
+			return viewportValues.join(' ');
 		},
 		points: function() {
-			var segmentData = this.$store.state.drawing.segments[this.addr];
 			var points = [];
-			if (segmentData.end) {points.push(segmentData.end);}
+			if (this.segment.data.end) {points.push(this.segment.data.end);}
 			return points;
 		},
 		guidePoints: function() {
-			var segmentData = this.$store.state.drawing.segments[this.addr];
-			var guidePoints = [];
-			if (segmentData.c0) {guidePoints.push(segmentData.c0);}
-			if (segmentData.c1) {guidePoints.push(segmentData.c1);}
-			return guidePoints;
+			var points = [];
+			if (this.segment.data.c0) {points.push(this.segment.data.c0);}
+			if (this.segment.data.c1) {points.push(this.segment.data.c1);}
+			return points;
 		},
 		guideLines: function() {
-			var segment = wrappers.segment(this.addr);
 			var guideLines = [];
-			if (segment.c0) {
+			if (this.segment.c0) {
 				guideLines.push({
 					key:'c0-guide/'+this.addr,
-					start: {x: segment.start.x, y: segment.start.y},
-					end: {x: segment.c0.x, y: segment.c0.y}
+					start: {x: this.segment.start.x, y: this.segment.start.y},
+					end: {x: this.segment.c0.x, y: this.segment.c0.y}
 				});
 			}
-			if (segment.c1) {
+			if (this.segment.c1) {
 				guideLines.push({
 					key:'c0-guide/'+this.addr,
-					start: {x: segment.end.x, y: segment.end.y},
-					end: {x: segment.c1.x, y: segment.c1.y}
+					start: {x: this.segment.end.x, y: this.segment.end.y},
+					end: {x: this.segment.c1.x, y: this.segment.c1.y}
 				});
 			}
-			/*if (segment.data.type.toLowerCase() == 'a') {
-				segment.setArcData();
-				guideLines.push({
-					key:'a0-guide/'+this.addr,
-					start: segment.center,
-					end: segment.vertex0
-				});
-				guideLines.push({
-					key:'a1-guide/'+this.addr,
-					start: segment.center,
-					end: segment.vertex1
-				});
-				guideLines.push({
-					key:'a2-guide/'+this.addr,
-					start: segment.vertex0,
-					end: segment.radiusHandle
-				});
-				guideLines.push({
-					key:'a3-guide/'+this.addr,
-					start: segment.vertex1,
-					end: segment.radiusHandle
-				});
-			}*/
 			return guideLines;
 		},
 		markers: function() {
 			var markers = [];
-			var segmentData = this.$store.state.drawing.segments[this.addr];
-			switch (segmentData.type.toLowerCase()) {
+			switch (this.segment.typeLc) {
 				case 'h':
 					markers.push({type: 'h-end', key:'h-end/'+this.addr });
 					break;
 				case 'v':
 					markers.push({type: 'v-end', key:'v-end/'+this.addr });
 					break;
-				/*case 'a':
-					markers.push({type: 'arc-rad', key:'arc-rad/'+this.addr });
-					markers.push({type: 'arc-rot', key:'arc-rot/'+this.addr });
-					break;*/
-
 			}
 			return markers;
 		}

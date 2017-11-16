@@ -1,21 +1,18 @@
 <template>
 	<g class="control-path" :data-addr="addr">
-		<control-subpath v-if="selected" v-for="subpathAddr in subpaths" :key="subpathAddr" :addr="subpathAddr" :layer="layer" />
+		<control-subpath v-if="path.selected" v-for="subpathAddr in path.data.subpaths" :key="subpathAddr" :addr="subpathAddr" :layer="layer" />
 	</g>
 </template>
 
 <script>
-import _ from 'lodash';
+import cache from '../drawing/cache.js';
 import ControlSubpath from './control-subpath.vue';
 export default {
 	props: ['addr','layer'],
 	components: { ControlSubpath },
 	computed: {
-		subpaths: function() {
-			return this.$store.state.drawing.nodes[this.addr].subpaths;
-		},
-		selected: function() {
-			return _.includes(this.$store.state.editor.selectedPaths, this.addr);
+		path: function() {
+			return cache.get('paths', this.addr);
 		}
 	}
 };
