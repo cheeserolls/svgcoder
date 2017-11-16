@@ -6,7 +6,6 @@
 import cache from '../drawing/cache.js';
 import _ from 'lodash';
 import markerMixin from './marker-mixin.js';
-import wrappers from '../util/wrappers.js';
 export default {
 	mixins: [markerMixin],
 	props: ['pointAddr','guide'],

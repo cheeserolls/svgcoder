@@ -5,13 +5,13 @@
 <script>
 import _ from 'lodash';
 import markerMixin from './marker-mixin.js';
-import wrappers from '../util/wrappers.js';
+import cache from '../drawing/cache.js';
 export default {
 	mixins: [markerMixin],
 	props: ['segmentAddr'],
 	computed: {
 		point: function() {
-			return wrappers.segment(this.segmentAddr).end;
+			return cache.get('segments',this.segmentAddr).end;
 		},
 		cssClass: function() {
 			return {
@@ -22,7 +22,7 @@ export default {
 	},
 	methods: {
 		moveTo: function(x,y) {
-			this.$store.commit('updateSegmentData',{addr: this.segmentAddr, name: 'endX', value: x});
+			this.$store.commit('updateNodeData',{addr: this.segmentAddr, name: 'endX', value: x});
 		}
 	}
 }

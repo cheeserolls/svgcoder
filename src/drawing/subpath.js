@@ -8,8 +8,9 @@ export default Vue.extend({
 	props: ['addr'],
 	computed: {
 		data: function() {
-			var data = this.$store.state.drawing.subpaths[this.addr];
-			if (data == null) {throw new ReferenceError('No subpath in store with address '+this.addr);}
+			var data = this.$store.state.drawing.nodes[this.addr];
+			if (data == null) {throw new ReferenceError('No node in store with address '+this.addr);}
+			if (data.nodeName !== 'subpath') {throw new ReferenceError('Node is not a subpath at address '+this.addr);}
 			return data;
 		},
 		segments: function() {
@@ -57,8 +58,8 @@ export default Vue.extend({
 	},
 	methods: {
 		moveStart: function(x, y) {
-			this.$store.commit('updatePointData',{addr: this.data.start, name: 'x', value: x});
-			this.$store.commit('updatePointData',{addr: this.data.start, name: 'y', value: y});
+			this.$store.commit('updateNodeData',{addr: this.data.start, name: 'x', value: x});
+			this.$store.commit('updateNodeData',{addr: this.data.start, name: 'y', value: y});
 			return true;
 		},
 		addSegment: function(type, endX, endY) {
@@ -68,7 +69,7 @@ export default Vue.extend({
 
 			var typeLc = type.toLowerCase();
 			var a = this.$app.$drawingAddresser;
-			var segmentData = {parent: this.addr, type: type};
+			var segmentData = {nodeName: 'segment', parent: this.addr, type: type};
 			var segmentAddr = a.getAddr(segmentData);
 			var start = this.end;
 
@@ -78,10 +79,10 @@ export default Vue.extend({
 			if (_.includes(['l','c','s','q','t','a'],newTypeLc)) {pointNames.push('end');}
 
 			for (var pointName of pointNames) {
-				var pointData = {x: endX, y: endY};
+				var pointData = {nodeName: 'point', parent: segmentAddr, x: endX, y: endY};
 				var pointAddr = a.getAddr(pointData);
 				segmentData[pointName] = pointAddr;
-				this.$store.commit('addPoint',{addr: pointAddr, data: pointData});
+				this.$store.commit('addNode',{addr: pointAddr, data: pointData});
 			}
 
 			if (typeLc == 'h') {
@@ -99,8 +100,8 @@ export default Vue.extend({
 				segmentData.sweep = 0;
 			}
 
-			this.$store.commit('addSegment',{addr: segmentAddr, data: segmentData, subpathAddr: subpathAddr, position: 'end'});
-			this.$store.commit('updateSubpathData',{addr: this.addr, name: 'segments', value: _.concat(this.data.segments, segmentAddr)});
+			this.$store.commit('addNode', {addr: segmentAddr, data: segmentData});
+			this.$store.commit('updateNodeData',{addr: this.addr, name: 'segments', value: _.concat(this.data.segments, segmentAddr)});
 			return segmentAddr;
 
 		},
@@ -109,7 +110,7 @@ export default Vue.extend({
 			if (!segmentAddr) {return;}
 			var segment = cache.get('segments', segmentAddr);
 			segment.delete();
-			this.$store.commit('updateSubpathData',{addr: this.addr, name: 'segments', value: _.without(this.data.segments, segmentAddr)});
+			this.$store.commit('updateNodeData',{addr: this.addr, name: 'segments', value: _.without(this.data.segments, segmentAddr)});
 		},
 		delete: function() {
 			// Note this should not be called directly - instead call from via the path - pathObj.deleteSubpath(index)
@@ -120,7 +121,7 @@ export default Vue.extend({
 				segment.delete();
 			}
 			// Remove from store
-			this.$store.commit('deleteSubpath',{addr: this.addr});
+			this.$store.commit('deleteNode',{addr: this.addr});
 			// Remove from cache
 			cache.delete('subpaths',this.addr);
 			// Call component destroy function to clean up connections with other vms

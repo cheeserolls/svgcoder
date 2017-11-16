@@ -14,7 +14,7 @@ export default {
 			return this.$store.state.drawing.nodes[this.addr];
 		},
 		componentName: function() {
-			switch (this.ele.type) {
+			switch (this.ele.nodeName) {
 				case 'path':
 					return 'path_';
 			}

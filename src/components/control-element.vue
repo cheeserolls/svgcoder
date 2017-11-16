@@ -11,7 +11,7 @@ export default {
 	},
 	computed: {
 		componentName: function() {
-			switch (this.$store.state.drawing.nodes[this.addr].type) {
+			switch (this.$store.state.drawing.nodes[this.addr].nodeName) {
 				case 'path':
 					return 'control-path';
 			}

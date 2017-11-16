@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import wrappers from '../util/wrappers.js';
+import cache from '../drawing/cache.js';
 export default {
 	data: function() {
 		return {
@@ -35,7 +35,7 @@ export default {
 			return this.relative ? this.nextTypeLc : this.nextTypeLc.toUpperCase();
 		},
 		path: function() {
-			return this.pathAddr ? wrappers.path(this.pathAddr) : null;
+			return this.pathAddr ? cache.get('paths', this.pathAddr) : null;
 		},
 		currentSubpath: function() {
 			var lastSubpath = this.path ? this.path.lastSubpath : null;

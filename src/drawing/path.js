@@ -9,7 +9,7 @@ export default Vue.extend({
 		data: function() {
 			var data = this.$store.state.drawing.nodes[this.addr];
 			if (data == null) {throw new ReferenceError('No node in store with address '+this.addr);}
-			if (data.type !== 'path') {throw new ReferenceError('Node is not a path at address '+this.addr);}
+			if (data.nodeName !== 'path') {throw new ReferenceError('Node is not a path at address '+this.addr);}
 			return data;
 		},
 		subpaths: function() {
@@ -32,13 +32,13 @@ export default Vue.extend({
 	methods: {
 		addSubpath: function(relative, startX, startY) {
 			var a = this.$app.$drawingAddresser;
-			var subpathData = {parent: this.addr, relative: relative, segments:[]};
+			var subpathData = {nodeName: 'subpath', parent: this.addr, relative: relative, segments:[]};
 			var subpathAddr = a.getAddr(subpathData);
-			var startData = {parent: subpathAddr, x: startX, y: startY};
+			var startData = {nodeName: 'point', parent: subpathAddr, x: startX, y: startY};
 			var startAddr = a.getAddr(startData);
 			subpathData.start = startAddr;
-			this.$store.commit('addPoint',{addr: startAddr, data: startData});
-			this.$store.commit('addSubpath',{addr: subpathAddr, data: subpathData});
+			this.$store.commit('addNode',{addr: startAddr, data: startData});
+			this.$store.commit('addNode',{addr: subpathAddr, data: subpathData});
 			this.$store.commit('updateNodeData',{addr: this.addr, name: 'subpaths', value: _.concat(this.data.subpaths, subpathAddr)});
 			return subpathAddr;
 		},

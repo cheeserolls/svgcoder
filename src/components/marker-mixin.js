@@ -43,7 +43,7 @@ export default {
 						var action = 'add';
 						break;
 				}
-				this.$store.commit('updateSelect', {action: action, markers: [this.addr]});
+				this.$store.commit('updateSelection', {action: action, markers: [this.addr]});
 			}
 		},
 		moveStart: function(e) {
@@ -61,7 +61,7 @@ export default {
 			this.moveUpdate(e);
 		},
 		moveTo: function(x,y) {
-			this.$store.commit('updateSegmentData',{addr: this.segmentAddr, name: 'endX', value: x});
+			this.$store.commit('updateNodeData',{addr: this.segmentAddr, name: 'endX', value: x});
 		}
 	},
 	mounted: function() {

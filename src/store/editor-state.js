@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import wrappers from '../util/wrappers.js';
 export default {
 	state: {
 		viewport: {

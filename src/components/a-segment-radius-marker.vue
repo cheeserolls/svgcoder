@@ -4,16 +4,17 @@
 
 <script>
 import _ from 'lodash';
+import cache from '../drawing/cache.js';
 import markerMixin from './marker-mixin.js';
-import wrappers from '../util/wrappers.js';
 export default {
 	mixins: [markerMixin],
 	props: ['segmentAddr','vertex'],
 	computed: {
+		arc: function() {
+			return cache.get('segments', this.segmentAddr);
+		},
 		point: function() {
-			var arc = wrappers.segment(this.segmentAddr);
-			arc.setArcData();
-			return arc.radiusHandle;
+			return this.arc.radiusHandle;
 		},
 		cssClass: function() {
 			return {
@@ -27,18 +28,15 @@ export default {
 		}/*,
 		moveStart: function(e) {
 			if ( this.filter(e) ) {
-				var arc = wrappers.segment(this.segmentAddr);
-				this.startRadiusX = arc.data.radiusX;
-				this.startRadiusY = arc.data.radiusY;
+				this.startRadiusX = this.arc.rx;
+				this.startRadiusY = this.arc.ry;
 			}
 		},
 		moveUpdate: function(e) {
 			if ( this.filter(e) ) {
-				var arc = wrappers.segment(this.segmentAddr);
-				arc.setArcData();
 				var dEl = arc.reverseRotate({x: e.dx, y: e.dy});
-				this.$store.commit('updateSegmentData',{addr: this.segmentAddr, name: 'radiusX', value: this.startRadiusX + dEl.x});
-				this.$store.commit('updateSegmentData',{addr: this.segmentAddr, name: 'radiusY', value: this.startRadiusY + dEl.y});
+				this.$store.commit('updateNodeData',{addr: this.segmentAddr, name: 'radiusX', value: this.startRadiusX + dEl.x});
+				this.$store.commit('updateNodeData',{addr: this.segmentAddr, name: 'radiusY', value: this.startRadiusY + dEl.y});
 			}
 		}*/
 	}

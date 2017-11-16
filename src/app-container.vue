@@ -19,7 +19,6 @@ import SelectTool from './tools/select-tool.vue';
 import DrawTool from './tools/draw-tool.vue';
 import Addresser from './util/addresser.js';
 import SvgLoader from './util/svg-loader.js';
-import wrappers from './util/wrappers.js';
 export default {
 	components: { Editor, CurrentTool, Toolbar },
 	methods: {
@@ -118,7 +117,6 @@ export default {
 		}
 	},
 	created: function() {
-		wrappers.setState(this.$store.state.drawing);
 		this.$tools = {};
 		this.addTool('settings','Settings',SettingsTool);
 		this.addTool('viewport','Viewport',ViewportTool,{hotkey:'v'});

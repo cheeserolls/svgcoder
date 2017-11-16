@@ -21,12 +21,12 @@
 </template>
 
 <script>
-import wrappers from '../util/wrappers.js';
+import cache from '../drawing/cache.js';
 export default {
 	props: ['segmentAddr'],
 	computed: {
 		segment: function() {
-			return wrappers.segment(this.segmentAddr);
+			return cache.get('segments', this.segmentAddr);
 		},
 		data: function() {
 			return this.segment.data;
@@ -88,10 +88,10 @@ export default {
 					value = parseFloat(value);
 					break;
 			}
-			this.$store.commit('updateSegmentData', {addr: this.segmentAddr, name: e.target.name, value: value});
+			this.$store.commit('updateNodeData', {addr: this.segmentAddr, name: e.target.name, value: value});
 		},
 		updateType: function(e) {
-			this.$store.commit('updateSegmentType',{segment: this.segment, type: e.target.options[e.target.selectedIndex].value});
+			this.segment.changeType(  e.target.options[e.target.selectedIndex].value );
 		},
 	}
 }

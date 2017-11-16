@@ -8,6 +8,7 @@ SvgLoader.prototype.readElementAttributes = function(eleData, ele) {
 	for (var attribute of ele.attributes) {
 		switch (attribute.name) {
 			case 'viewbox':
+				// viewbox of root SVG element is handled by extractDataFromSvgElement(), so ignore it here
 				break;
 			case 'id':
 				eleData.id = attribute.value;
@@ -16,7 +17,6 @@ SvgLoader.prototype.readElementAttributes = function(eleData, ele) {
 				eleData.class = attribute.value;
 				break;
 			case 'style':
-				// what to do here then?
 				eleData.style = {};
 				for (var i=0; i<ele.style.length; i++) {
 					eleData.style[ele.style[i]] = ele.style.getPropertyValue(ele.style[i]);
@@ -24,7 +24,7 @@ SvgLoader.prototype.readElementAttributes = function(eleData, ele) {
 				break;
 			case 'd':
 				// path data
-				this.readPathData(eleData, attribute.value, ele);
+				this.readPathData(eleData, attribute.value);
 				break;
 			default:
 				if (attribute.specified) {
@@ -36,29 +36,29 @@ SvgLoader.prototype.readElementAttributes = function(eleData, ele) {
 	}
 };
 
-SvgLoader.prototype.readNode = function(node) {
+SvgLoader.prototype.readNode = function(node, parentAddr) {
 
-	var nodeData = {};
-	var nodeAddr = this.addresser.getAddr(node);
+	var nodeData = {parent: parentAddr};
+	var nodeAddr = this.addresser.getAddr(nodeData);
 	this.data.nodes[nodeAddr] = nodeData;
 
 	if (node.nodeType == 1) {
-		nodeData.type = node.tagName;
+		nodeData.nodeName = node.tagName;
 		this.readElementAttributes(nodeData, node);
 	} else {
-		nodeData.type = node.nodeName;
+		nodeData.nodeName = node.nodeName;
 		nodeData.value = node.nodeValue;
 	}
 
 	nodeData.children = [];
 	for (var i=0; i<node.childNodes.length; i++) {
-		nodeData.children[i] = this.readNode(node.childNodes[i]);
+		nodeData.children[i] = this.readNode(node.childNodes[i], nodeAddr);
 	}
 
 	return nodeAddr;
 };
 
-SvgLoader.prototype.readPathData = function(eleData, pathString, ele) {
+SvgLoader.prototype.readPathData = function(eleData, pathString) {
 
 	var pointNames = ['c0','c1','end'];
 	eleData.subpaths = [];
@@ -66,29 +66,30 @@ SvgLoader.prototype.readPathData = function(eleData, pathString, ele) {
 	var subpaths = parser.parse(pathString);
 
 	for (var i=0; i<subpaths.length; i++) {
-		var subpath = subpaths[i];
-		subpath.parent = this.addresser.getAddr(ele);
-		var subpathAddr = this.addresser.getAddr(subpath);
-		this.data.subpaths[subpathAddr] = subpath;
+
+		var subpathData = _.assign(subpaths[i], {nodeName: 'subpath', parent: this.addresser.getAddr(eleData)});
+		var subpathAddr = this.addresser.getAddr(subpathData);
+		this.data.nodes[subpathAddr] = subpathData;
 		eleData.subpaths.push(subpathAddr);
-		var start = subpath.start;
-		start.parent = subpathAddr;
-		var startAddr = this.addresser.getAddr(start);
-		this.data.points[startAddr] = start;
-		subpath.start = startAddr;
-		for (var j=0; j<subpath.segments.length; j++) {
-			var segment = subpath.segments[j];
-			segment.parent = subpathAddr;
-			var segmentAddr = this.addresser.getAddr(segment);
-			this.data.segments[segmentAddr] = segment;
-			subpath.segments[j] = segmentAddr;
+
+		var startData = _.assign(subpathData.start, {nodeName: 'point', parent: subpathAddr});
+		var startAddr = this.addresser.getAddr(startData);
+		this.data.nodes[startAddr] = startData;
+		subpathData.start = startAddr; // replace data with address
+
+		for (var j=0; j<subpathData.segments.length; j++) {
+
+			var segmentData = _.assign(subpathData.segments[j], {nodeName: 'segment', parent: subpathAddr});
+			var segmentAddr = this.addresser.getAddr(segmentData);
+			this.data.nodes[segmentAddr] = segmentData;
+			subpathData.segments[j] = segmentAddr; // replace data with address
+
 			for (var pointName of pointNames) {
-				if (segment[pointName]) {
-					var point = segment[pointName];
-					point.parent = segmentAddr;
-					var pointAddr = this.addresser.getAddr(point);
-					this.data.points[pointAddr] = point;
-					segment[pointName] = pointAddr;
+				if (segmentData[pointName]) {
+					var pointData = _.assign(segmentData[pointName],{nodeName: 'point', parent: segmentAddr});
+					var pointAddr = this.addresser.getAddr(pointData);
+					this.data.nodes[pointAddr] = pointData;
+					segmentData[pointName] = pointAddr; // replace data with address
 				}
 			}
 		}
@@ -98,12 +99,9 @@ SvgLoader.prototype.readPathData = function(eleData, pathString, ele) {
 
 SvgLoader.prototype.extractDataFromSvgElement = function(svgRootEle) {
 
-	this.data = {
-		nodes: {},
-		subpaths: {},
-		segments: {},
-		points: {},
-	};
+	this.data = {};
+
+	this.data.nodes = {};
 
 	this.data.viewbox = {
 		x: svgRootEle.viewBox.baseVal.x,
@@ -112,7 +110,7 @@ SvgLoader.prototype.extractDataFromSvgElement = function(svgRootEle) {
 		height: svgRootEle.viewBox.baseVal.height
 	};
 
-	this.data.rootNode = this.readNode(svgRootEle);
+	this.data.rootNode = this.readNode(svgRootEle, null);
 
 	return this.data;
 
