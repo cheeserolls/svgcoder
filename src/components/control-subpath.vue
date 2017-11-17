@@ -14,7 +14,7 @@ export default {
 	components: { PointMarker, ControlSegment },
 	computed: {
 		subpath: function() {
-			return cache.get('subpaths', this.addr);
+			return cache.get(this.addr, 'subpath');
 		}
 	}
 };

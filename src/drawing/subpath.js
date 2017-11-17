@@ -4,42 +4,41 @@ import store from '../store/store.js';
 import geom from './geom.js';
 import cache from './cache.js';
 export default Vue.extend({
-	store: store,
 	props: ['addr'],
 	computed: {
 		data: function() {
-			var data = this.$store.state.drawing.nodes[this.addr];
+			var data = store.state.drawing.nodes[this.addr];
 			if (data == null) {throw new ReferenceError('No node in store with address '+this.addr);}
 			if (data.nodeName !== 'subpath') {throw new ReferenceError('Node is not a subpath at address '+this.addr);}
 			return data;
 		},
 		segments: function() {
-			return this.data.segments.map( segmentAddr => cache.get('segments', segmentAddr) );
+			return this.data.segments.map( segmentAddr => cache.get(segmentAddr, 'segment') );
 		},
 		path: function() {
-			return cache.get('paths',this.data.parent);
+			return cache.get(this.data.parent, 'path');
 		},
 		index: function() {
 			return this.path.data.subpaths.indexOf(this.addr);
 		},
 		prev: function() {
 			var addr = this.path.data.segments[this.index - 1];
-			return addr ? cache.get('subpath',addr) : null;
+			return addr ? cache.get(addr, 'subpath') : null;
 		},
 		next: function() {
 			var addr = this.path.data.segments[this.index + 1];
-			return addr ? cache.get('subpath',addr) : null;
+			return addr ? cache.get(addr, 'subpath') : null;
 		},
 		firstSegment: function() {
 			var segmentAddr = this.data.segments[0];
-			return segmentAddr ? cache.get('segments', segmentAddr) : null;
+			return segmentAddr ? cache.get(segmentAddr, 'segment') : null;
 		},
 		lastSegment: function() {
 			var segmentAddr = this.data.segments[this.data.segments.length - 1];
-			return segmentAddr ? cache.get('segments', segmentAddr) : null;
+			return segmentAddr ? cache.get(segmentAddr, 'segment') : null;
 		},
 		start: function() {
-			return cache.get('points', this.data.start);
+			return cache.get(this.data.start, 'point');
 		},
 		end: function() {
 			return this.lastSegment ? this.lastSegment.end : this.start;
@@ -58,8 +57,8 @@ export default Vue.extend({
 	},
 	methods: {
 		moveStart: function(x, y) {
-			this.$store.commit('updateNodeData',{addr: this.data.start, name: 'x', value: x});
-			this.$store.commit('updateNodeData',{addr: this.data.start, name: 'y', value: y});
+			store.commit('updateNodeData',{addr: this.data.start, name: 'x', value: x});
+			store.commit('updateNodeData',{addr: this.data.start, name: 'y', value: y});
 			return true;
 		},
 		addSegment: function(type, endX, endY) {
@@ -82,7 +81,7 @@ export default Vue.extend({
 				var pointData = {nodeName: 'point', parent: segmentAddr, x: endX, y: endY};
 				var pointAddr = a.getAddr(pointData);
 				segmentData[pointName] = pointAddr;
-				this.$store.commit('addNode',{addr: pointAddr, data: pointData});
+				store.commit('addNode',{addr: pointAddr, data: pointData});
 			}
 
 			if (typeLc == 'h') {
@@ -100,17 +99,17 @@ export default Vue.extend({
 				segmentData.sweep = 0;
 			}
 
-			this.$store.commit('addNode', {addr: segmentAddr, data: segmentData});
-			this.$store.commit('updateNodeData',{addr: this.addr, name: 'segments', value: _.concat(this.data.segments, segmentAddr)});
+			store.commit('addNode', {addr: segmentAddr, data: segmentData});
+			store.commit('updateNodeData',{addr: this.addr, name: 'segments', value: _.concat(this.data.segments, segmentAddr)});
 			return segmentAddr;
 
 		},
 		deleteSegment: function(index) {
 			var segmentAddr = this.data.segments[index];
 			if (!segmentAddr) {return;}
-			var segment = cache.get('segments', segmentAddr);
+			var segment = cache.get(segmentAddr, 'segment');
 			segment.delete();
-			this.$store.commit('updateNodeData',{addr: this.addr, name: 'segments', value: _.without(this.data.segments, segmentAddr)});
+			store.commit('updateNodeData',{addr: this.addr, name: 'segments', value: _.without(this.data.segments, segmentAddr)});
 		},
 		delete: function() {
 			// Note this should not be called directly - instead call from via the path - pathObj.deleteSubpath(index)
@@ -121,9 +120,9 @@ export default Vue.extend({
 				segment.delete();
 			}
 			// Remove from store
-			this.$store.commit('deleteNode',{addr: this.addr});
+			store.commit('deleteNode',{addr: this.addr});
 			// Remove from cache
-			cache.delete('subpaths',this.addr);
+			cache.delete(this.addr);
 			// Call component destroy function to clean up connections with other vms
 			this.$destroy();
 		}

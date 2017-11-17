@@ -26,7 +26,7 @@ export default {
 	components: { GuideLine, PointMarker, HSegmentEndMarker, VSegmentEndMarker/*, ASegmentRadiusMarker, ASegmentRotationMarker*/ },
 	computed: {
 		segment: function() {
-			return cache.get('segments', this.addr);
+			return cache.get(this.addr, 'segment');
 		},
 		traceCssClass: function() {
 			return {

@@ -8,7 +8,7 @@ export default {
 	props: ['addr'],
 	computed: {
 		path: function() {
-			return cache.get('paths', this.addr);
+			return cache.get(this.addr, 'path');
 		}
 	}
 };

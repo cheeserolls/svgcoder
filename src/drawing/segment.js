@@ -4,11 +4,10 @@ import store from '../store/store.js';
 import geom from './geom.js';
 import cache from './cache.js';
 export default Vue.extend({
-	store: store,
 	props: ['addr'],
 	computed: {
 		data: function() {
-			var data = this.$store.state.drawing.nodes[this.addr];
+			var data = store.state.drawing.nodes[this.addr];
 			if (data == null) {throw new ReferenceError('No node in store with address '+this.addr);}
 			if (data.nodeName !== 'segment') {throw new ReferenceError('Node is not a segment at address '+this.addr);}
 			return data;
@@ -23,18 +22,18 @@ export default Vue.extend({
 			return (this.type == this.typeLc);
 		},
 		subpath: function() {
-			return cache.get('subpaths',this.data.parent);
+			return cache.get(this.data.parent, 'subpath');
 		},
 		index: function() {
 			return this.subpath.data.segments.indexOf(this.addr);
 		},
 		prev: function() {
 			var addr = this.subpath.data.segments[this.index - 1];
-			return addr ? cache.get('segments',addr) : null;
+			return addr ? cache.get(addr, 'segment') : null;
 		},
 		next: function() {
 			var addr = this.subpath.data.segments[this.index + 1];
-			return addr ? cache.get('segments',addr) : null;
+			return addr ? cache.get(addr, 'segment') : null;
 		},
 		start: function() {
 			return this.prev ? this.prev.end : this.subpath.start;
@@ -48,14 +47,14 @@ export default Vue.extend({
 				case 'z': case 'Z':
 					return this.subpath.start;
 				default:
-					return cache.get('points',this.data.end);
+					return cache.get(this.data.end, 'point');
 			}
 		},
 		c0: function() {
-			return this.data.c0 ? cache.get('points',this.data.c0) : null;
+			return this.data.c0 ? cache.get(this.data.c0, 'point') : null;
 		},
 		c1: function() {
-			return this.data.c1 ? cache.get('points',this.data.c1) : null;
+			return this.data.c1 ? cache.get(this.data.c1, 'point') : null;
 		},
 		s0: function() {
 			var prev = this.prev;
@@ -74,7 +73,7 @@ export default Vue.extend({
 			return this.calculateValues(this.relative);
 		},
 		selected: function() {
-			return _.includes(this.$store.state.editor.selectedSegments, this.addr);
+			return _.includes(store.state.editor.selectedSegments, this.addr);
 		},
 
 		/***** Arc Stuff *****/
@@ -203,11 +202,11 @@ export default Vue.extend({
 				throw new RangeError(`Unrecognised point name ${pointName}`);
 			}
 			if (this.typeLc == 'h' && pointName == 'end') {
-				this.$store.commit('updateNodeData',{addr: this.addr, name: 'endX', value: x});
+				store.commit('updateNodeData',{addr: this.addr, name: 'endX', value: x});
 				return true;
 			}
 			if (this.typeLc == 'v' && pointName == 'end') {
-				this.$store.commit('updateNodeData',{addr: this.addr, name: 'endY', value: y});
+				store.commit('updateNodeData',{addr: this.addr, name: 'endY', value: y});
 				return true;
 			}
 			if (pointName == 'start') {
@@ -222,8 +221,8 @@ export default Vue.extend({
 				throw new RangeError(`Segment type ${this.type} has no point called ${pointName}`);
 			}
 			// Otherwise it's a regular point
-			this.$store.commit('updateNodeData',{addr: pointAddr, name: 'x', value: x});
-			this.$store.commit('updateNodeData',{addr: pointAddr, name: 'y', value: y});
+			store.commit('updateNodeData',{addr: pointAddr, name: 'x', value: x});
+			store.commit('updateNodeData',{addr: pointAddr, name: 'y', value: y});
 			return true;
 		},
 		calculateValues: function(relative) {
@@ -290,7 +289,7 @@ export default Vue.extend({
 
 			if (this.typeLc == newTypeLc) {
 				// only the 'relativity' is changing, but it's otherwise the same segment type, so can quit early
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'type', value: newType});
+				store.commit('updateNodeData', {addr: this.addr, name:'type', value: newType});
 				return;
 			}
 
@@ -304,60 +303,60 @@ export default Vue.extend({
 			for (var pointName of _.difference(mightHave, shouldHave)) {
 				if (this.data[pointName]) {
 					this[pointName].delete();
-					this.$store.commit('removeNodeData', {addr: this.addr, name: pointName});
+					store.commit('removeNodeData', {addr: this.addr, name: pointName});
 				}
 			}
 			if (!this.data.c0 && _.includes(shouldHave,'c0')) {
 				var pos = _.includes(['s','t'],this.typeLc) ? this.s0 : geom.interpolate( newTypeLc=='c' ? 1/3 : 1/2, this.start, this.end );
 				var data = {nodeName: 'point', parent: this.addr, x: pos.x, y: pos.y};
 				var addr = a.getAddr(data);
-				this.$store.commit('addNode',{addr: addr, data: data});
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'c0', value: addr});
+				store.commit('addNode',{addr: addr, data: data});
+				store.commit('updateNodeData', {addr: this.addr, name:'c0', value: addr});
 			}
 			if (!this.data.c1 && _.includes(shouldHave,'c1')) {
 				var pos = geom.interpolate( 2/3, this.start, this.end );
 				var data = {nodeName: 'point', parent: this.addr, x: pos.x, y: pos.y};
 				var addr = a.getAddr(data);
-				this.$store.commit('addNode',{addr: addr, data: data});
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'c1', value: addr});
+				store.commit('addNode',{addr: addr, data: data});
+				store.commit('updateNodeData', {addr: this.addr, name:'c1', value: addr});
 			}
 			if (!this.data.end && _.includes(shouldHave,'end')) {
 				var data = {nodeName: 'point', parent: this.addr, x: this.end.x, y: this.end.y};
 				var addr = a.getAddr(data);
-				this.$store.commit('addNode',{addr: addr, data: data});
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'end', value: addr});
+				store.commit('addNode',{addr: addr, data: data});
+				store.commit('updateNodeData', {addr: this.addr, name:'end', value: addr});
 			}
 			if (newTypeLc=='h') {
-				this.$store.commit('removeNodeData', {addr: this.addr, name:'endX', value: this.end.x});
+				store.commit('removeNodeData', {addr: this.addr, name:'endX', value: this.end.x});
 			} else {
-				this.$store.commit('removeNodeData', {addr: this.addr, name:'endX'});
+				store.commit('removeNodeData', {addr: this.addr, name:'endX'});
 			}
 			if (newTypeLc=='v') {
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'endY', value: this.end.y});
+				store.commit('updateNodeData', {addr: this.addr, name:'endY', value: this.end.y});
 			} else {
-				this.$store.commit('removeNodeData', {addr: this.addr, name:'endY'});
+				store.commit('removeNodeData', {addr: this.addr, name:'endY'});
 			}
 			if (newTypeLc=='a') {
 				var radius = geom.distance(this.start, this.end) * 0.5;
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'radiusX', value: radius});
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'radiusY', value: radius});
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'rot', value: 0});
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'arc', value: 0});
-				this.$store.commit('updateNodeData', {addr: this.addr, name:'sweep', value: 0});
+				store.commit('updateNodeData', {addr: this.addr, name:'radiusX', value: radius});
+				store.commit('updateNodeData', {addr: this.addr, name:'radiusY', value: radius});
+				store.commit('updateNodeData', {addr: this.addr, name:'rot', value: 0});
+				store.commit('updateNodeData', {addr: this.addr, name:'arc', value: 0});
+				store.commit('updateNodeData', {addr: this.addr, name:'sweep', value: 0});
 			} else {
-				this.$store.commit('removeNodeData', {addr: this.addr, name:'radiusX'});
-				this.$store.commit('removeNodeData', {addr: this.addr, name:'radiusY'});
-				this.$store.commit('removeNodeData', {addr: this.addr, name:'rot'});
-				this.$store.commit('removeNodeData', {addr: this.addr, name:'arc'});
-				this.$store.commit('removeNodeData', {addr: this.addr, name:'sweep'});
+				store.commit('removeNodeData', {addr: this.addr, name:'radiusX'});
+				store.commit('removeNodeData', {addr: this.addr, name:'radiusY'});
+				store.commit('removeNodeData', {addr: this.addr, name:'rot'});
+				store.commit('removeNodeData', {addr: this.addr, name:'arc'});
+				store.commit('removeNodeData', {addr: this.addr, name:'sweep'});
 			}
 
-			this.$store.commit('updateNodeData', {addr: this.addr, name:'type', value: newType});
+			store.commit('updateNodeData', {addr: this.addr, name:'type', value: newType});
 		},
 		delete: function() {
 			// Note this should not be called directly - instead call from via the subpath - subpathObj.deleteSegment(index)
 			// Deselect (if selected)
-			this.$store.commit('updateSelection',{action: 'remove', segments:[this.addr]});
+			store.commit('updateSelection',{action: 'remove', segments:[this.addr]});
 			// Delete child points
 			for (var pointName of ['c0','c1','end']) {
 				if (this.data[pointName]) {
@@ -365,9 +364,9 @@ export default Vue.extend({
 				}
 			}
 			// Remove from store
-			this.$store.commit('deleteNode',{addr: this.addr});
+			store.commit('deleteNode',{addr: this.addr});
 			// Remove from cache
-			cache.delete('segments',this.addr);
+			cache.delete(this.addr);
 			// Call component destroy function to clean up connections with other vms
 			this.$destroy();
 		}

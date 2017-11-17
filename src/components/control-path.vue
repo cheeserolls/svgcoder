@@ -12,7 +12,7 @@ export default {
 	components: { ControlSubpath },
 	computed: {
 		path: function() {
-			return cache.get('paths', this.addr);
+			return cache.get(this.addr, 'path');
 		}
 	}
 };

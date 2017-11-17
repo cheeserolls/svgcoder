@@ -36,7 +36,7 @@ export default {
 			return this.relative ? this.nextTypeLc : this.nextTypeLc.toUpperCase();
 		},
 		path: function() {
-			return this.pathAddr ? cache.get('paths', this.pathAddr) : null;
+			return this.pathAddr ? cache.get(this.pathAddr, 'path') : null;
 		},
 		currentSubpath: function() {
 			var lastSubpath = this.path ? this.path.lastSubpath : null;
@@ -103,32 +103,22 @@ export default {
 			}
 		},
 		newSubpath: function(x,y) {
-			if (this.path) {
-				var path = this.path;
-				var pathAddr = this.pathAddr;
-			} else {
-				var pathData = {nodeName:'path', class: 'st0', subpaths:[]};
-				var pathAddr = this.pathAddr = this.$app.$drawingAddresser.getAddr(pathData);
-				this.$store.commit('addNode',{addr: pathAddr, data: pathData});
-				var rootAddr = this.$store.state.drawing.rootNode;
-				var existingChildren = this.$store.state.drawing.nodes[rootAddr].children;
-				this.$store.commit('updateNodeData',{addr: rootAddr, name: 'children', value: _.concat(existingChildren, pathAddr)});
-				var path = cache.get('paths', pathAddr);
+			if (!this.path) {
+				var root = cache.get(this.$store.state.drawing.rootNode);
+				this.pathAddr = root.addChild({nodeName:'path', class: 'st0', subpaths:[]});
 			}
-			var subpathAddr = path.addSubpath(this.relative, x, y);
-			this.$store.commit('updateSelection',{action:'replace', paths:[pathAddr]});
-			this.newSegment(subpathAddr, x, y);
+			var subpathAddr = this.path.addSubpath(this.relative, x, y);
+			this.$store.commit('updateSelection',{action:'replace', paths:[this.pathAddr]});
+			this.newSegment(x, y);
 		},
-		newSegment: function(subpathAddr, endX, endY) {
-			var subpath = cache.get('subpaths',subpathAddr);
-			var segmentAddr = subpath.addSegment(this.nextType, endX, endY);
+		newSegment: function(endX, endY) {
+			var segmentAddr = this.currentSubpath.addSegment(this.nextType, endX, endY);
 			this.$store.commit('updateSelection',{action:'replace', segments:[segmentAddr]});
 			this.pointNameQueue = this.pointNamesFor(this.nextTypeLc);
 		},
-		closeSubpath: function(subpathAddr) {
-			var subpath = cache.get('subpaths',subpathAddr);
-			var segmentAddr = subpath.addSegment( this.relative ? 'z' : 'Z' );
-			this.$store.commit('updateSelection',{action:'deselect', segments:true});
+		closeSubpath: function() {
+			var segmentAddr = this.currentSubpath.addSegment( this.relative ? 'z' : 'Z' );
+			this.$store.commit('updateSelection',{action:'replace', segments:[segmentAddr]});
 			this.pointNameQueue = [];
 		},
 		deleteCurrentSegment: function(cascadeSubpath, cascadePath) {
@@ -153,7 +143,7 @@ export default {
 				this.mousemove(e);
 				this.pointNameQueue.shift();
 				if (!this.pointNameQueue.length) {
-					this.newSegment(this.currentSubpath.addr, p.x, p.y);
+					this.newSegment(p.x, p.y);
 				}
 			} else {
 				this.newSubpath(p.x, p.y);
@@ -194,7 +184,7 @@ export default {
 				case 'z':
 					// remove the current segment, close the current subpath, and start a new subpath
 					this.deleteCurrentSegment(true, false);
-					this.closeSubpath(this.currentSubpath.addr);
+					this.closeSubpath();
 					this.pointNameQueue = [];
 					e.handled = true;
 					return;

@@ -14,7 +14,7 @@ export default {
 			return this.pointAddr;
 		},
 		point: function() {
-			return cache.get('points', this.addr);
+			return cache.get(this.addr, 'point');
 		},
 		selected: function() {
 			return this.point.selected;

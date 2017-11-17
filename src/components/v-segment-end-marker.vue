@@ -11,7 +11,7 @@ export default {
 	props: ['segmentAddr'],
 	computed: {
 		point: function() {
-			return cache.get('segments',this.segmentAddr).end;
+			return cache.get(this.segmentAddr, 'segment').end;
 		},
 		cssClass: function() {
 			return {

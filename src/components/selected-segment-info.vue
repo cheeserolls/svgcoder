@@ -26,7 +26,7 @@ export default {
 	props: ['segmentAddr'],
 	computed: {
 		segment: function() {
-			return cache.get('segments', this.segmentAddr);
+			return cache.get(this.segmentAddr, 'segment');
 		},
 		data: function() {
 			return this.segment.data;

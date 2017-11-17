@@ -11,7 +11,7 @@ export default {
 	props: ['segmentAddr','vertex'],
 	computed: {
 		arc: function() {
-			return cache.get('segments', this.segmentAddr);
+			return cache.get(this.segmentAddr, 'segment');
 		},
 		point: function() {
 			return this.arc.radiusHandle;
