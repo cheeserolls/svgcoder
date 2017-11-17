@@ -1,5 +1,5 @@
 <template>
-	<component v-if="componentName" :is="componentName" :addr="addr" :ele="ele" />
+	<component v-if="componentName" :is="componentName" :addr="addr" />
 </template>
 
 <script>
